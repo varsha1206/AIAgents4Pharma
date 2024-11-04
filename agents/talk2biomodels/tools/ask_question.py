@@ -5,11 +5,11 @@ Tool for asking a question about the simulation results.
 """
 
 from typing import Type, Optional
+import streamlit as st
+from pydantic import BaseModel, Field
 from langchain_core.tools import BaseTool
 from langchain_core.callbacks import CallbackManagerForToolRun
-from pydantic import BaseModel, Field
 from langchain.agents.agent_types import AgentType
-import streamlit as st
 from langchain_experimental.agents import create_pandas_dataframe_agent
 from langchain_openai import ChatOpenAI
 
@@ -35,7 +35,17 @@ class AskQuestionTool(BaseTool):
              question: str,
              st_session_key: str,
              run_manager: Optional[CallbackManagerForToolRun] = None) -> str:
-        """Use the tool."""
+        """
+        Run the tool.
+
+        Args:
+            question (str): The question to ask about the simulation results.
+            st_session_key (str): The Streamlit session key.
+            run_manager (Optional[CallbackManagerForToolRun]): The CallbackManagerForToolRun object.
+
+        Returns:
+            str: The answer to the question.
+        """
         if st_session_key not in st.session_state:
             return f"Session key {st_session_key} not found in Streamlit session state."
         model_object = st.session_state[st_session_key]
@@ -61,9 +71,29 @@ class AskQuestionTool(BaseTool):
         llm_result = df_agent.invoke(question)
         return llm_result["output"]
 
+    def run(self,
+            question: str,
+            st_session_key: str,
+            run_manager: Optional[CallbackManagerForToolRun] = None) -> str:
+        """
+        Run the tool.
+
+        Args:
+            question (str): The question to ask about the simulation results.
+            st_session_key (str): The Streamlit session key.
+            run_manager (Optional[CallbackManagerForToolRun]): The CallbackManagerForToolRun object.
+
+        Returns:
+            str: The answer to the question.
+        """
+        return self._run(question=question, st_session_key=st_session_key, run_manager=run_manager)
+
     def get_metadata(self):
         """
         Get metadata for the tool.
+
+        Returns:
+            dict: The metadata for the tool.
         """
         return {
             "name": self.name,
@@ -71,10 +101,3 @@ class AskQuestionTool(BaseTool):
             "args_schema": self.args_schema.schema(),
             "return_direct": self.return_direct,
         }
-
-    def get_tool_type(self):
-        """
-        Get the type of the tool.
-        """
-        return "tool"
-        

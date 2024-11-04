@@ -4,15 +4,15 @@
 Tool for plotting a figure.
 """
 
-import matplotlib.pyplot as plt
 from typing import Type
-from langchain_core.tools import BaseTool
+import matplotlib.pyplot as plt
 from pydantic import BaseModel, Field
 import streamlit as st
 from langchain_openai import ChatOpenAI
+from langchain_core.tools import BaseTool
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_experimental.tools import PythonAstREPLTool
 from langchain_core.output_parsers.openai_tools import JsonOutputKeyToolsParser
+from langchain_experimental.tools import PythonAstREPLTool
 
 class PlotImageInput(BaseModel):
     """
@@ -34,10 +34,18 @@ class PlotImageTool(BaseTool):
     def _run(self,
              question: str,
              st_session_key: str) -> str:
-        """Use the tool."""
+        """
+        Run the tool.
+
+        Args:
+            question (str): The question to ask about the model description.
+            st_session_key (str): The Streamlit session key.
+
+        Returns:
+            str: The answer to the question
+        """
         model_object = st.session_state[st_session_key]
-        modelid = model_object.model_id
-        if modelid is None:
+        if model_object is None:
             return "Please provide a valid model ID for simulation."
         df = model_object.simulation_results
         tool = PythonAstREPLTool(locals={"df": df})
@@ -63,13 +71,20 @@ class PlotImageTool(BaseTool):
         parser = JsonOutputKeyToolsParser(key_name=tool.name, first_tool_only=True)
         code_chain = prompt | llm_with_tools | parser
         response = code_chain.invoke({"question": question})
-        # print (response)
         exec(response['query'], globals(), {"df": df, "plt": plt})
         # load for plotly
         fig = plt.gcf()
         st.pyplot(fig, use_container_width=False)
         st.dataframe(df)
-        # return None
+        return "Figure plotted successfully"
+
+    def run(self,
+            question: str,
+            st_session_key: str) -> str:
+        """
+        Run the tool.
+        """
+        return self._run(question=question, st_session_key=st_session_key)
 
     def get_metadata(self):
         """
@@ -80,9 +95,3 @@ class PlotImageTool(BaseTool):
             "description": self.description,
             "return_direct": self.return_direct,
         }
-
-    def get_tool_type(self):
-        """
-        Get the type of the tool.
-        """
-        return "tool"

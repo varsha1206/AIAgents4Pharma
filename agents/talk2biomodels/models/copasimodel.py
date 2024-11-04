@@ -78,9 +78,6 @@ class CopasiModel(BioModel):
         # Update parameters in the model
         if parameters:
             for param_name, param_value in parameters.items():
-                # Skip parameters with None values
-                if param_value is None:
-                    continue
                 basico.model_info.set_species(name=param_name,
                                             exact=True,
                                             initial_concentration=param_value,
@@ -95,17 +92,3 @@ class CopasiModel(BioModel):
         df_result.reset_index(inplace=True)
         self.simulation_results = df_result
         return df_result.copy()
-
-    def validate_model(self) -> bool:
-        """
-        Validate that the model can be loaded and parameters can be accessed.
-        
-        :return: True if the model is valid, False otherwise.
-        """
-        try:
-            # Attempt to access model parameters to verify successful loading
-            parameters = basico.get_parameters()
-            return parameters is not None
-        except Exception as e:
-            print(f"Validation error: {e}")
-            return False
