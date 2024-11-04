@@ -85,13 +85,7 @@ class SimulateModelTool(BaseTool):
         st.plotly_chart(fig, use_container_width = False)
         return f"Simulation results for the model {modelid}."
 
-    def run(self,
-            modelid: Optional[int] = None,
-            duration: Optional[Union[int, float]] = 100.0,
-            interval: Optional[int] = 10,
-            species_name: Optional[str] = None,
-            species_concentration: Optional[Union[int, float]] = None,
-            st_session_key: str = None) -> str:
+    def call_run(self, **kwargs):
         """
         Run the tool.
 
@@ -106,6 +100,12 @@ class SimulateModelTool(BaseTool):
         Returns:
             str: The result of the simulation.
         """
+        modelid = kwargs.get("modelid")
+        duration = kwargs.get("duration")
+        interval = kwargs.get("interval")
+        species_name = kwargs.get("species_name")
+        species_concentration = kwargs.get("species_concentration")
+        st_session_key = kwargs.get("st_session_key")
         return self._run(modelid=modelid,
                          duration=duration,
                          interval=interval,

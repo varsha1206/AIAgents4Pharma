@@ -26,7 +26,7 @@ def test_run_with_valid_modelid(simulate_model_tool):
         st_session_key="test_key"
     )
     st.session_state["test_key"] = None
-    result = simulate_model_tool.run(**input_data.model_dump())
+    result = simulate_model_tool.call_run(**input_data.model_dump())
     assert result == f"Simulation results for the model {input_data.modelid}."
 
 def test_run_with_invalid_modelid(simulate_model_tool):
@@ -41,7 +41,7 @@ def test_run_with_invalid_modelid(simulate_model_tool):
         st_session_key="test_key"
     )
     st.session_state["test_key"] = None
-    result = simulate_model_tool.run(**input_data.model_dump())
+    result = simulate_model_tool.call_run(**input_data.model_dump())
     assert result == "Please provide a valid model ID first for simulation."
     input_data2 = SimulateModelInput(
         modelid=64,
@@ -51,8 +51,8 @@ def test_run_with_invalid_modelid(simulate_model_tool):
         species_concentration=1.0,
         st_session_key="test_key"
     )
-    simulate_model_tool.run(**input_data2.model_dump())
-    result = simulate_model_tool.run(**input_data.model_dump())
+    simulate_model_tool.call_run(**input_data2.model_dump())
+    result = simulate_model_tool.call_run(**input_data.model_dump())
     assert result == "Simulation results for the model 64."
 
 def test_run_with_missing_session_key(simulate_model_tool):
@@ -67,7 +67,7 @@ def test_run_with_missing_session_key(simulate_model_tool):
         st_session_key="missing_key"
     )
     print (st.session_state)
-    result = simulate_model_tool.run(**input_data.model_dump())
+    result = simulate_model_tool.call_run(**input_data.model_dump())
     assert result == "Session key missing_key not found in Streamlit session state."
 
 def test_get_metadata(simulate_model_tool):

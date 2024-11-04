@@ -75,7 +75,7 @@ class ModelDescriptionTool(BaseTool):
         return chain.invoke({"description": description,
                              "question": question})
 
-    def run(self,
+    def call_run(self,
             question: str,
             st_session_key: str,
             run_manager: Optional[CallbackManagerForToolRun] = None) -> str:

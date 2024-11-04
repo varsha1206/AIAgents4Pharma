@@ -14,7 +14,7 @@ def plot_image_tool_fixture():
     '''
     return PlotImageTool()
 
-def test_run(plot_image_tool):
+def test_call_run(plot_image_tool):
     '''
     Test the _run method of the PlotImageTool class with an invalid model ID.
     '''
@@ -23,11 +23,11 @@ def test_run(plot_image_tool):
         st_session_key="test_key"
     )
     st.session_state["test_key"] = None
-    result = plot_image_tool.run(**input_data.model_dump())
+    result = plot_image_tool.call_run(**input_data.model_dump())
     assert result == "Please provide a valid model ID for simulation."
     st.session_state["test_key"] = CopasiModel(model_id=64)
     st.session_state["test_key"].simulate(duration=2, interval=2)
-    result = plot_image_tool.run(**input_data.model_dump())
+    result = plot_image_tool.call_run(**input_data.model_dump())
     assert result == "Figure plotted successfully"
 
 def test_get_metadata(plot_image_tool):

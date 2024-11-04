@@ -78,7 +78,7 @@ class PlotImageTool(BaseTool):
         st.dataframe(df)
         return "Figure plotted successfully"
 
-    def run(self,
+    def call_run(self,
             question: str,
             st_session_key: str) -> str:
         """

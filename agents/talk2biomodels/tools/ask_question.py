@@ -71,7 +71,7 @@ class AskQuestionTool(BaseTool):
         llm_result = df_agent.invoke(question)
         return llm_result["output"]
 
-    def run(self,
+    def call_run(self,
             question: str,
             st_session_key: str,
             run_manager: Optional[CallbackManagerForToolRun] = None) -> str:

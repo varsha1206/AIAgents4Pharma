@@ -78,6 +78,9 @@ class CopasiModel(BioModel):
         # Update parameters in the model
         if parameters:
             for param_name, param_value in parameters.items():
+                # check if the param_name is not None
+                if param_name is None:
+                    continue
                 basico.model_info.set_species(name=param_name,
                                             exact=True,
                                             initial_concentration=param_value,

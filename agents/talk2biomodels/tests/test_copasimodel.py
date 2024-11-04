@@ -15,6 +15,8 @@ def test_with_model_id():
     # check if the simulation results are a pandas DataFrame object
     assert isinstance(model.simulate(parameters={'Species1': 0.5}, duration=2, interval=2),
                     pd.DataFrame)
+    assert isinstance(model.simulate(parameters={None: None}, duration=2, interval=2),
+                    pd.DataFrame)
     assert model.description == basico.biomodels.get_model_info(64)["description"]
 
 def test_with_sbml_file():

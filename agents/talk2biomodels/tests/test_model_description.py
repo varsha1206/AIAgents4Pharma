@@ -23,7 +23,7 @@ def test_run_with_missing_session_key(model_description_tool):
         question="What is the description of the model?",
         st_session_key="missing_key"
     )
-    result = model_description_tool.run(**input_data.model_dump())
+    result = model_description_tool.call_run(**input_data.model_dump())
     assert result == "Session key missing_key not found in Streamlit session state."
 
 def test_run_with_valid_key_but_model_data(model_description_tool):
@@ -35,7 +35,7 @@ def test_run_with_valid_key_but_model_data(model_description_tool):
         st_session_key="test_key"
     )
     st.session_state["test_key"] = None
-    result = model_description_tool.run(**input_data.model_dump())
+    result = model_description_tool.call_run(**input_data.model_dump())
     assert result == "Please run the simulation first before asking a question."
 
 def test_run_with_valid_key_and_model_data_but_no_description(model_description_tool):
@@ -48,7 +48,7 @@ def test_run_with_valid_key_and_model_data_but_no_description(model_description_
     )
     st.session_state["test_key"] = CopasiModel(model_id=64)
     st.session_state["test_key"].description = None
-    result = model_description_tool.run(**input_data.model_dump())
+    result = model_description_tool.call_run(**input_data.model_dump())
     assert result == "No description found for the model."
 
 def test_run_with_valid_key_model_data_description(model_description_tool):
@@ -61,13 +61,13 @@ def test_run_with_valid_key_model_data_description(model_description_tool):
     )
     st.session_state["test_key"] = CopasiModel(model_id=64)
     run_manager = CallbackManagerForToolRun(run_id=1, handlers=[], inheritable_handlers=False)
-    result = model_description_tool.run(**input_data.model_dump(), run_manager=run_manager)
+    result = model_description_tool.call_run(**input_data.model_dump(), run_manager=run_manager)
     assert result is not None
     run_manager = CallbackManagerForToolRun(run_id=1,
                                             handlers=[],
                                             inheritable_handlers=False,
                                             metadata={"prompt": "Answer the question carefully."})
-    result = model_description_tool.run(**input_data.model_dump(), run_manager=run_manager)
+    result = model_description_tool.call_run(**input_data.model_dump(), run_manager=run_manager)
     assert result is not None
 
 def test_get_metadata(model_description_tool):
