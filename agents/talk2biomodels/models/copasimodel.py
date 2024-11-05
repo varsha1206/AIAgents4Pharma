@@ -35,7 +35,6 @@ class CopasiModel(BioModel):
         """
         # If model_id is given but no SBML file path, download the SBML file
         if model_id and not sbml_file_path:
-            # sbml_file_path = self._download_sbml_file(model_id)
             self.model_id = model_id
             self.copasi_model = basico.load_biomodel(model_id)
             self.description = basico.biomodels.get_model_info(self.model_id)["description"]
@@ -43,6 +42,7 @@ class CopasiModel(BioModel):
         elif sbml_file_path:
             super().__init__(model_id, name, description)
             self.sbml_file_path = sbml_file_path
+            self.model_id = ""
             self.copasi_model = basico.load_model(sbml_file_path)
         else:
             raise ValueError("Either model_id or sbml_file_path must be provided.")
@@ -52,7 +52,8 @@ class CopasiModel(BioModel):
         """
         Retrieve metadata specific to the COPASI model.
         
-        :return: Dictionary with metadata such as model type and parameter count.
+        Returns:
+            Dictionary of model metadata.
         """
         return {
             "Model Type": "SBML Model (COPASI)",
@@ -70,6 +71,7 @@ class CopasiModel(BioModel):
         Args:
             parameters: Dictionary of model parameters to update before simulation.
             duration: Duration of the simulation in time units.
+            interval: Interval between time points in the simulation.
         
         Returns:
             Pandas DataFrame with time-course simulation results.

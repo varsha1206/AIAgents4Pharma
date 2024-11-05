@@ -7,7 +7,7 @@ Tool for asking a question about the simulation results.
 from typing import Type, Optional
 import streamlit as st
 from pydantic import BaseModel, Field
-from langchain_core.tools import BaseTool
+from langchain_core.tools.base import BaseTool
 from langchain_core.callbacks import CallbackManagerForToolRun
 from langchain.agents.agent_types import AgentType
 from langchain_experimental.agents import create_pandas_dataframe_agent
@@ -46,6 +46,7 @@ class AskQuestionTool(BaseTool):
         Returns:
             str: The answer to the question.
         """
+        # Check if st_session_key is in Streamlit session state
         if st_session_key not in st.session_state:
             return f"Session key {st_session_key} not found in Streamlit session state."
         model_object = st.session_state[st_session_key]
