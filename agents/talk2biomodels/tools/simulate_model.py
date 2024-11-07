@@ -139,7 +139,7 @@ class SimulateModelTool(BaseTool):
         # Display the plot in Streamlit
         st.plotly_chart(fig, use_container_width = False)
         if modelid is None:
-            modelid = sbml_file_path
+            modelid = "internal"
         content = f"Simulation results for the model {modelid}."
         return content
 

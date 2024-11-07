@@ -62,12 +62,14 @@ class ModelDescriptionTool(BaseTool):
             str: The answer to the question.
         """
         # Check if sys_bio_model is provided
-        if sys_bio_model.modelid or sys_bio_model.sbml_file_path or sys_bio_model.model_object:
+        if sys_bio_model.modelid or sys_bio_model.sbml_file_path \
+            or sys_bio_model.model_object not in [None, "", {}]:
             if sys_bio_model.modelid:
                 model_object = BasicoModel(model_id=sys_bio_model.modelid)
             elif sys_bio_model.sbml_file_path:
                 model_object = BasicoModel(sbml_file_path=sys_bio_model.sbml_file_path)
             else:
+                print (sys_bio_model.model_object, 'model_object')
                 model_object = sys_bio_model.model_object
             if st_session_key:
                 st.session_state[st_session_key] = model_object

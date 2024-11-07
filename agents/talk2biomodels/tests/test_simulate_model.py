@@ -87,12 +87,12 @@ def test_run_with_valid_sbml_file_path(simulate_model_tool):
                                           time_data=time_data,
                                           species_data=species_data,
                                           st_session_key=st_session_key)
-    assert result == f"Simulation results for the model {sbml_file_path}."
+    assert result == "Simulation results for the model internal."
     st.session_state["sbml_file_path"] = model_data.sbml_file_path
     result = simulate_model_tool.call_run(time_data=time_data,
                                           species_data=species_data,
                                           st_session_key=st_session_key)
-    assert result == f"Simulation results for the model {sbml_file_path}."
+    assert result == "Simulation results for the model internal."
 
 def test_run_with_no_modelid_or_sbml_file_path(simulate_model_tool):
     '''
