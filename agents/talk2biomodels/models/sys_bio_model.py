@@ -3,30 +3,28 @@ An abstract base class for BioModels in the BioModels repository.
 '''
 
 from abc import ABC, abstractmethod
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Optional
+from pydantic import BaseModel, Field, model_validator
 
-class BioModel(ABC):
+class SysBioModel(ABC, BaseModel):
     """
     Abstract base class for BioModels in the BioModels repository.
     This class serves as a general structure for models, allowing
     different mathematical approaches to be implemented in subclasses.
     """
+    model_id: Optional[int] = Field(None, description="BioModel ID of the model")
+    sbml_file_path: Optional[str] = Field(None, description="Path to an SBML file")
+    name: Optional[str] = Field(..., description="Name of the model")
+    description: Optional[str] = Field("", description="Description of the model")
 
-    def __init__(self, model_id: str, name: str, description: str = ""):
+    @model_validator(mode="after")
+    def check_model_id_or_sbml_file_path(self):
         """
-        Initialize the BioModel instance.
-        
-        Args:
-            model_id: BioModel ID of the model.
-            name: Name of the model.
-            description: Description of the model.
-
-        Returns:
-            None
+        Validate that either model_id or sbml_file_path is provided.
         """
-        self.model_id = model_id
-        self.name = name
-        self.description = description
+        if not self.model_id and not self.sbml_file_path:
+            raise ValueError("Either model_id or sbml_file_path must be provided.")
+        return self
 
     @abstractmethod
     def get_model_metadata(self) -> Dict[str, Union[str, int]]:

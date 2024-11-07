@@ -4,7 +4,8 @@
 Tool for plotting a figure.
 """
 
-from typing import Type
+from typing import Type, Optional
+from dataclasses import dataclass
 import matplotlib.pyplot as plt
 from pydantic import BaseModel, Field
 import streamlit as st
@@ -13,13 +14,24 @@ from langchain_core.tools import BaseTool
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers.openai_tools import JsonOutputKeyToolsParser
 from langchain_experimental.tools import PythonAstREPLTool
+from ..models.basico_model import BasicoModel
+
+@dataclass
+class ModelData:
+    """
+    Dataclass for storing the model data.
+    """
+    modelid: Optional[int] = None
+    sbml_file_path: Optional[str] = None
+    model_object: Optional[BasicoModel] = None
 
 class PlotImageInput(BaseModel):
     """
     Input schema for the PlotImage tool.
     """
     question: str = Field(description="Description of the plot")
-    st_session_key: str = Field(description="Streamlit session key")
+    sys_bio_model: ModelData = Field(description="model data", default=None)
+    st_session_key: str = Field(description="Streamlit session key", default=None)
 
 # Note: It's important that every field has type hints. BaseTool is a
 # Pydantic class and not having type hints can lead to unexpected behavior.
@@ -33,7 +45,8 @@ class PlotImageTool(BaseTool):
 
     def _run(self,
              question: str,
-             st_session_key: str) -> str:
+             sys_bio_model: ModelData = ModelData(),
+             st_session_key: str = None) -> str:
         """
         Run the tool.
 
@@ -44,9 +57,30 @@ class PlotImageTool(BaseTool):
         Returns:
             str: The answer to the question
         """
-        model_object = st.session_state[st_session_key]
+        # Check if sys_bio_model is provided
+        if sys_bio_model.modelid or sys_bio_model.sbml_file_path or sys_bio_model.model_object:
+            if sys_bio_model.modelid:
+                model_object = BasicoModel(model_id=sys_bio_model.modelid)
+            elif sys_bio_model.sbml_file_path:
+                model_object = BasicoModel(sbml_file_path=sys_bio_model.sbml_file_path)
+            else:
+                model_object = sys_bio_model.model_object
+            if st_session_key:
+                st.session_state[st_session_key] = model_object
+        else:
+            # If the model_object is not provided,
+            # get it from the Streamlit session state
+            if st_session_key:
+                if st_session_key not in st.session_state:
+                    return f"Session key {st_session_key} not found in Streamlit session state."
+                model_object = st.session_state[st_session_key]
+            else:
+                return "Please provide a valid model object or \
+                    Streamlit session key that contains the model object."
         if model_object is None:
-            return "Please provide a valid model ID for simulation."
+            return "Please run the simulation first before plotting the figure."
+        if model_object.simulation_results is None:
+            model_object.simulate()
         df = model_object.simulation_results
         tool = PythonAstREPLTool(locals={"df": df})
         llm = ChatOpenAI(model="gpt-3.5-turbo")
@@ -75,17 +109,21 @@ class PlotImageTool(BaseTool):
         exec(response['query'], globals(), {"df": df, "plt": plt})
         # load for plotly
         fig = plt.gcf()
-        st.pyplot(fig, use_container_width=False)
-        st.dataframe(df)
+        if st_session_key:
+            st.pyplot(fig, use_container_width=False)
+            st.dataframe(df)
         return "Figure plotted successfully"
 
     def call_run(self,
             question: str,
-            st_session_key: str) -> str:
+            sys_bio_model: ModelData = ModelData(),
+            st_session_key: str = None) -> str:
         """
         Run the tool.
         """
-        return self._run(question=question, st_session_key=st_session_key)
+        return self._run(question=question,
+                         sys_bio_model=sys_bio_model,
+                         st_session_key=st_session_key)
 
     def get_metadata(self):
         """
@@ -93,6 +131,5 @@ class PlotImageTool(BaseTool):
         """
         return {
             "name": self.name,
-            "description": self.description,
-            "return_direct": self.return_direct,
+            "description": self.description
         }

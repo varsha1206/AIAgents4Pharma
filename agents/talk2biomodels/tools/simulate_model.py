@@ -4,21 +4,21 @@
 Tool for simulating a model.
 """
 
-from typing import Type, Union, List
+from typing import Type, Union, List, Optional
 from dataclasses import dataclass
 from pydantic import BaseModel, Field
 from langchain_core.tools import BaseTool
 import streamlit as st
 import plotly.express as px
-from ..models.copasimodel import CopasiModel
+from ..models.basico_model import BasicoModel
 
 @dataclass
 class ModelData:
     """
     Dataclass for storing the model data.
     """
-    modelid: int = None
-    sbml_file_path: str = None
+    modelid: Optional[int] = None
+    sbml_file_path: Optional[str] = None
 
 @dataclass
 class TimeData:
@@ -40,7 +40,7 @@ class SimulateModelInput(BaseModel):
     """
     Input schema for the SimulateModel tool.
     """
-    st_session_key: str = Field(description="Streamlit session key")
+    st_session_key: str = Field(description="Streamlit session key", default=None)
     model_data: ModelData = Field(description="model data", default=None)
     time_data: TimeData = Field(description="time data", default=None)
     species_data: SpeciesData = Field(description="species data", default=None)
@@ -59,7 +59,7 @@ class SimulateModelTool(BaseTool):
                 model_data: ModelData = None,
                 time_data: TimeData = None,
                 species_data: SpeciesData = None,
-                st_session_key: str = None) -> str:
+                st_session_key: str = None):
         """
         Run the tool.
 
@@ -78,32 +78,45 @@ class SimulateModelTool(BaseTool):
         interval = time_data.interval if time_data is not None else 10
         # Prepare the dictionary of species data
         # that will be passed to the simulate method
-        # of the CopasiModel class
+        # of the BasicoModel class
         dic_species_data = None
         if species_data is not None:
             dic_species_data = dict(zip(species_data.species_name,
                                     species_data.species_concentration))
         # Retrieve the SBML file path from the Streamlit session state
         # otherwise retrieve it from the model_data object if the user
-        # has provided it
-        if 'sbml_file_path' in st.session_state:
-            sbml_file_path = st.session_state.sbml_file_path
-        else:
-            sbml_file_path = model_data.sbml_file_path if model_data is not None else None
-        if st_session_key not in st.session_state:
-            return f"Session key {st_session_key} not found in Streamlit session state."
+        # has provided it.
+        sbml_file_path = model_data.sbml_file_path if model_data is not None else None
+        if st_session_key:
+            if st_session_key not in st.session_state:
+                return f"Session key {st_session_key} not found in Streamlit session state."
+            if 'sbml_file_path' in st.session_state:
+                sbml_file_path = st.session_state.sbml_file_path
         # Check if both modelid and sbml_file_path are None
         if modelid is None and sbml_file_path is None:
-            model_object = st.session_state[st_session_key]
-            if model_object is None:
-                return "Please provide a valid model ID or local SBML file path for simulation."
-            modelid = model_object.model_id
-        elif modelid is not None:
-            model_object = CopasiModel(model_id=modelid)
+            # Then load the model from the Streamlit session state
+            # if the streamlit session exists
+            if st_session_key:
+                model_object = st.session_state[st_session_key]
+                # If this model object is None, then return an error message
+                if model_object is None:
+                    return "Please provide a BioModels ID or an SBML file path for simulation."
+                # Retrieve the model ID from the model object
+                modelid = model_object.model_id
+            else:
+                # Otherwise return an error message
+                return "Please provide a BioModels ID or an SBML file path for simulation."
+        elif modelid:
+            # Create a BasicoModel object with the model ID
+            # model_object = BasicoModel(model_id=modelid)
+            model_object = BasicoModel(model_id=modelid)
+            # Save the model object in the Streamlit session state
             st.session_state[st_session_key] = model_object
-        elif sbml_file_path is not None:
-            model_object = CopasiModel(sbml_file_path=sbml_file_path)
+        elif sbml_file_path:
+            # Create a BasicoModel object with the SBML file path
+            model_object = BasicoModel(sbml_file_path=sbml_file_path)
             modelid = model_object.model_id
+            # Save the model object in the Streamlit session state
             st.session_state[st_session_key] = model_object
         # Simulate the model
         df = model_object.simulate(parameters=dic_species_data,
@@ -125,7 +138,10 @@ class SimulateModelTool(BaseTool):
         )
         # Display the plot in Streamlit
         st.plotly_chart(fig, use_container_width = False)
-        return f"Simulation results for the model {modelid}."
+        if modelid is None:
+            modelid = sbml_file_path
+        content = f"Simulation results for the model {modelid}."
+        return content
 
     def call_run(self,
                 model_data: ModelData = None,

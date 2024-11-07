@@ -43,7 +43,7 @@ def test_run_with_invalid_modelid(simulate_model_tool):
                                         time_data=time_data,
                                         species_data=species_data,
                                         st_session_key=st_session_key)
-    assert result == "Please provide a valid model ID or local SBML file path for simulation."
+    assert result == "Please provide a BioModels ID or an SBML file path for simulation."
     model_data=ModelData(modelid=64)
     time_data=TimeData(duration=100.0, interval=10)
     species_data=SpeciesData(species_name=["Pyruvate"], species_concentration=[1.0])
@@ -76,7 +76,8 @@ def test_run_with_valid_sbml_file_path(simulate_model_tool):
     '''
     Test the _run method of the SimulateModelTool class with a valid SBML file path.
     '''
-    model_data=ModelData(sbml_file_path="./BIOMD0000000064.xml")
+    sbml_file_path="./BIOMD0000000064.xml"
+    model_data=ModelData(sbml_file_path=sbml_file_path)
     time_data=TimeData(duration=100.0, interval=10)
     species_data=SpeciesData(species_name=["Pyruvate"], species_concentration=[1.0])
     st_session_key="test_key"
@@ -86,12 +87,12 @@ def test_run_with_valid_sbml_file_path(simulate_model_tool):
                                           time_data=time_data,
                                           species_data=species_data,
                                           st_session_key=st_session_key)
-    assert result == "Simulation results for the model ."
+    assert result == f"Simulation results for the model {sbml_file_path}."
     st.session_state["sbml_file_path"] = model_data.sbml_file_path
     result = simulate_model_tool.call_run(time_data=time_data,
                                           species_data=species_data,
                                           st_session_key=st_session_key)
-    assert result == "Simulation results for the model ."
+    assert result == f"Simulation results for the model {sbml_file_path}."
 
 def test_run_with_no_modelid_or_sbml_file_path(simulate_model_tool):
     '''
@@ -105,7 +106,11 @@ def test_run_with_no_modelid_or_sbml_file_path(simulate_model_tool):
     result = simulate_model_tool.call_run(time_data=time_data,
                                           species_data=species_data,
                                           st_session_key=st_session_key)
-    assert result == "Please provide a valid model ID or local SBML file path for simulation."
+    assert result == "Please provide a BioModels ID or an SBML file path for simulation."
+    result = simulate_model_tool.call_run(time_data=time_data,
+                                          species_data=species_data,
+                                          st_session_key=None)
+    assert result == "Please provide a BioModels ID or an SBML file path for simulation."
 
 def test_get_metadata(simulate_model_tool):
     '''
