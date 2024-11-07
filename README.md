@@ -7,7 +7,7 @@ Welcome to **AIAgents4Pharma** – an open-source project by [Team VPE](https://
 Our toolkit currently consists of three intelligent agents, each designed to simplify and enhance access to specialized data in biology:
 
 - **Talk2BioModels**: Engage directly with mathematical models in systems biology.
-- **Talk2Cell** *(Coming soon)*: Query and analyze sequencing data with ease.
+- **Talk2Cells** *(Coming soon)*: Query and analyze sequencing data with ease.
 - **Talk2KnowledgeGraphs** *(Coming soon)*: Access and explore complex biological knowledge graphs for insightful data connections.
 
 ---
@@ -16,15 +16,15 @@ Our toolkit currently consists of three intelligent agents, each designed to sim
 
 ### 1. Talk2BioModels
 
-**Talk2BioModels** is an AI agent designed to facilitate interaction with mathematical models in systems biology. Systems biology models are critical in understanding complex biological mechanisms, but they’re often inaccessible to those without coding or mathematical expertise. Talk2BioModel simplifies this, enabling researchers to focus on analysis and interpretation rather than on programming. With Talk2BioModel, users can interact directly with these models through natural language. By simply asking questions or making requests, users can:
+**Talk2BioModels** is an AI agent designed to facilitate interaction with mathematical models in systems biology. Systems biology models are critical in understanding complex biological mechanisms, but they’re often inaccessible to those without coding or mathematical expertise. Talk2BioModels simplifies this, enabling researchers to focus on analysis and interpretation rather than on programming. With Talk2BioModels, users can interact directly with these models through natural language. By simply asking questions or making requests, users can:
 
 - Forward simulation of both internal and open-source models (BioModels).
 - Adjust parameters within the model to simulate different conditions.
 - Query simulation results.
 
-### 2. Talk2Cell *(Coming soon)*
+### 2. Talk2Cells *(Coming soon)*
 
-**Talk2Cell** is being developed to provide direct access to and analysis of sequencing data, such as RNA-Seq or DNA-Seq, using natural language.
+**Talk2Cells** is being developed to provide direct access to and analysis of sequencing data, such as RNA-Seq or DNA-Seq, using natural language.
 
 ### 3. Talk2KnowledgeGraphs *(Work in Progress)*
 
@@ -59,7 +59,7 @@ Our toolkit currently consists of three intelligent agents, each designed to sim
 4. **Launch the agent:**
    To launch the Talk2BioModels agent, run:
    ```bash
-   python app/frontend/streamlit_app.py
+   streamlit run app/frontend/streamlit_app.py
    ```
 
 For detailed instructions on each agent, please refer to their respective folders.
@@ -68,9 +68,9 @@ For detailed instructions on each agent, please refer to their respective folder
 
 ## Usage
 
-**Talk2BioModel** currently provides an interactive console where you can enter natural language queries to simulate models, adjust parameters, and query the simulated results.
+**Talk2BioModels** currently provides an interactive console where you can enter natural language queries to simulate models, adjust parameters, and query the simulated results.
 
-More detailed usage examples, including sample data for Talk2Cell and Talk2KnowledgeGraphs, will be provided as development progresses.
+More detailed usage examples, including sample data for Talk2Cells and Talk2KnowledgeGraphs, will be provided as development progresses.
 
 ---
 
@@ -79,13 +79,13 @@ More detailed usage examples, including sample data for Talk2Cell and Talk2Knowl
 We welcome contributions to AIAgents4Pharma! Here’s how you can help:
 
 1. **Fork the repository**
-2. **Create a new branch** for your feature (`git checkout -b feature-name`)
-3. **Commit your changes** (`git commit -m 'Add new feature'`)
-4. **Push to the branch** (`git push origin feature-name`)
+2. **Create a new branch** for your feature (`git checkout -b feat/feature-name`)
+3. **Commit your changes** (`git commit -m 'feat: Add new feature'`)
+4. **Push to the branch** (`git push origin feat/feature-name`)
 5. **Open a pull request**
 
 ### Current Needs
-- **Beta testers** for Talk2BioModel.
+- **Beta testers** for Talk2BioModels.
 - **Developers** with experience in natural language processing, bioinformatics, or knowledge graphs for contributions to AIAgents4Pharma.
 
 Check out our [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
@@ -95,11 +95,11 @@ Check out our [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
 ## Roadmap
 
 ### Completed
-- **Talk2BioModela**: Initial release with core capabilities for interacting with systems biology models.
+- **Talk2BioModels**: Initial release with core capabilities for interacting with systems biology models.
 
 ### Planned
 - **User Interface**: Interactive web UI for all agents.
-- **Talk2Cell**: Integration of sequencing data analysis tools.
+- **Talk2Cells**: Integration of sequencing data analysis tools.
 - **Talk2KnowledgeGraphs**: Interface for biological knowledge graph interaction.
 
 We’re excited to bring AIAgents4Pharma to the bioinformatics and pharmaceutical research community. Together, let’s make data-driven biological research more accessible and insightful. 
