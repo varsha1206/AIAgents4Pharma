@@ -36,6 +36,36 @@ def test_run_with_missing_session_key(input_data, model_description_tool):
                                         st_session_key=input_data.st_session_key)
     assert isinstance(result, str)
 
+def test_model_data_initialization():
+    """
+    Test the initialization of the ModelData class.
+    """
+    model_data = ModelData(modelid=1,
+                        sbml_file_path="path/to/file",
+                        model_object=BasicoModel(model_id=1))
+    assert model_data.modelid == 1
+    assert model_data.sbml_file_path == "path/to/file"
+    assert isinstance(model_data.model_object, BasicoModel)
+
+def test_check_model_object():
+    """
+    Test the check_model_object method of the ModelData class.
+    """
+    # Test with valid BasicoModel object
+    model_data = ModelData(model_object=BasicoModel(model_id=1))
+    validated_data = model_data.check_model_object(model_data.__dict__)
+    assert validated_data['model_object'] is not None
+
+    # Test with invalid model_object
+    model_data = ModelData(model_object="invalid_object")
+    validated_data = model_data.check_model_object(model_data.__dict__)
+    assert validated_data['model_object'] is None
+
+    # Test with None model_object
+    model_data = ModelData(model_object=None)
+    validated_data = model_data.check_model_object(model_data.__dict__)
+    assert validated_data['model_object'] is None
+
 def test_run_with_valid_key_no_model_data(input_data, model_description_tool):
     '''
     Test the _run method of the ModelDescriptionTool class with a valid session key.
