@@ -2,6 +2,7 @@
 Test cases for simulate_model.py
 '''
 
+from time import sleep
 import pytest
 import streamlit as st
 from ..tools.simulate_model import (SimulateModelTool,
@@ -35,6 +36,7 @@ def test_run_with_invalid_modelid(simulate_model_tool):
     '''
     Test the _run method of the SimulateModelTool class with an invalid model ID.
     '''
+    sleep(5)
     time_data=TimeData(duration=100.0, interval=10)
     species_data=SpeciesData(species_name=["Pyruvate"], species_concentration=[1.0])
     st_session_key="test_key"
@@ -44,6 +46,7 @@ def test_run_with_invalid_modelid(simulate_model_tool):
                                         species_data=species_data,
                                         st_session_key=st_session_key)
     assert result == "Please provide a BioModels ID or an SBML file path for simulation."
+    slice(5)
     model_data=ModelData(modelid=64)
     time_data=TimeData(duration=100.0, interval=10)
     species_data=SpeciesData(species_name=["Pyruvate"], species_concentration=[1.0])

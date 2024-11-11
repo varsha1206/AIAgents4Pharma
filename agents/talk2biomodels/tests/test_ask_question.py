@@ -15,7 +15,7 @@ def ask_question_tool_fixture():
     '''
     return AskQuestionTool()
 
-@pytest.fixture(name="input_data")
+@pytest.fixture(name="input_data", scope="module")
 def input_data_fixture():
     '''
     Fixture for creating an instance of AskQuestionInput.
@@ -67,6 +67,7 @@ def test_run_with_session_key(input_data, ask_question_tool):
     '''
     Test the _run method of the AskQuestionTool class with a missing session key.
     '''
+    input_data.sys_bio_model = ModelData(modelid=64)
     result = ask_question_tool.call_run(question=input_data.question,
                                         sys_bio_model=input_data.sys_bio_model,
                                         st_session_key=input_data.st_session_key)
@@ -85,6 +86,7 @@ def test_run_with_none_key(input_data, ask_question_tool):
     result = ask_question_tool.call_run(question=input_data.question,
                                         sys_bio_model=input_data.sys_bio_model,
                                         st_session_key=input_data.st_session_key)
+    # No model data or object in the streeamlit key
     assert result == "Please provide a valid model object or \
                     Streamlit session key that contains the model object."
     input_data.st_session_key = "test_key"

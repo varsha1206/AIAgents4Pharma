@@ -36,7 +36,7 @@ def test_with_sbml_file():
     assert isinstance(model_object.simulate(parameters={'NADH': 0.5}, duration=2, interval=2),
                       pd.DataFrame)
 
-def test_check_model_id_or_sbml_file_path(model):
+def test_check_model_id_or_sbml_file_path():
     '''
     Test the check_model_id_or_sbml_file_path method of the BioModel class.
     '''

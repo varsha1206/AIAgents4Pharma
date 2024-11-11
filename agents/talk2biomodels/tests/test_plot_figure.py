@@ -14,7 +14,7 @@ def plot_image_tool_fixture():
     '''
     return PlotImageTool()
 
-@pytest.fixture(name="input_data")
+@pytest.fixture(name="input_data", scope="module")
 def input_data_fixture():
     '''
     Fixture for creating an instance of AskQuestionInput.
@@ -45,20 +45,17 @@ def test_call_run_with_different_input_model_data(input_data, plot_image_tool):
     '''
     Test the _run method of the PlotImageTool class with different input model data.
     '''
+    input_data.sys_bio_model = ModelData(modelid=64)
     result = plot_image_tool.call_run(question=input_data.question,
                                     sys_bio_model=input_data.sys_bio_model,
                                     st_session_key=input_data.st_session_key)
     assert result == "Figure plotted successfully"
-    input_data.sys_bio_model = ModelData(sbml_file_path="./BIOMD0000000064_url.xml")
     result = plot_image_tool.call_run(question=input_data.question,
-                                    sys_bio_model=input_data.sys_bio_model,
-                                    st_session_key=input_data.st_session_key)
+                        sys_bio_model=ModelData(sbml_file_path="./BIOMD0000000064_url.xml"),
+                        st_session_key=input_data.st_session_key)
     assert result == "Figure plotted successfully"
-    model = BasicoModel(model_id=64)
-    model.simulate(duration=2, interval=2)
-    input_data.sys_bio_model = ModelData(model_object=model)
     result = plot_image_tool.call_run(question=input_data.question,
-                                    sys_bio_model=input_data.sys_bio_model,
+                                    sys_bio_model=ModelData(model_object=BasicoModel(model_id=64)),
                                     st_session_key=input_data.st_session_key)
     assert result == "Figure plotted successfully"
     # without simulation results

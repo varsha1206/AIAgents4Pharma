@@ -59,7 +59,6 @@ class AskQuestionTool(BaseTool):
         Returns:
             str: The answer to the question.
         """
-        print (sys_bio_model)
         # Check if sys_bio_model is provided in the input
         if sys_bio_model.modelid or sys_bio_model.sbml_file_path or sys_bio_model.model_object:
             if sys_bio_model.modelid is not None:
