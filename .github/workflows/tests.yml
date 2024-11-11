@@ -5,7 +5,7 @@ name: TESTS
 on:
   # Triggers the workflow on push or pull request events
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -47,7 +47,7 @@ jobs:
       - name: Run pylint
         shell: bash -l {0}
         run: |
-          pylint --disable=R0801,W0221,W0122 agents
+          pylint --disable=R0801,W0221,W0122 aiagents4pharma
   
   # code coverage job for ubuntu and macos
   code-cov-ubuntu-macos:

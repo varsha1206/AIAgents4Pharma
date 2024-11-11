@@ -8,11 +8,10 @@ import os
 import sys
 import streamlit as st
 sys.path.append('./')
-from agents.talk2biomodels.tools.ask_question import AskQuestionTool
-from agents.talk2biomodels.tools.simulate_model import SimulateModelTool
-from agents.talk2biomodels.tools.plot_figure import PlotImageTool
-from agents.talk2biomodels.tools.model_description import ModelDescriptionTool
-from langchain_core.tools import tool
+from aiagents4pharma.talk2biomodels.tools.ask_question import AskQuestionTool
+from aiagents4pharma.talk2biomodels.tools.simulate_model import SimulateModelTool
+from aiagents4pharma.talk2biomodels.tools.plot_figure import PlotImageTool
+from aiagents4pharma.talk2biomodels.tools.model_description import ModelDescriptionTool
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
