@@ -20,7 +20,9 @@ def test_with_model_id(model):
     """
     assert model.model_id == 64
     # check if the simulation results are a pandas DataFrame object
-    assert isinstance(model.simulate(parameters={'Pyruvate': 0.5}, duration=2, interval=2),
+    assert isinstance(model.simulate(parameters={'Pyruvate': 0.5, 'KmPFKF6P': 1.5},
+                                     duration=2,
+                                     interval=2),
                     pd.DataFrame)
     assert isinstance(model.simulate(parameters={None: None}, duration=2, interval=2),
                     pd.DataFrame)

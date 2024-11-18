@@ -62,10 +62,19 @@ class BasicoModel(SysBioModel):
                 # check if the param_name is not None
                 if param_name is None:
                     continue
-                basico.model_info.set_species(name=param_name,
-                                            exact=True,
-                                            initial_concentration=param_value,
-                                            model=self.copasi_model)
+                # if param is a kinectic parameter
+                df_all_params = basico.model_info.get_parameters(model=self.copasi_model)
+                if param_name in df_all_params.index.tolist():
+                    basico.model_info.set_parameters(name=param_name,
+                                                exact=True,
+                                                initial_value=param_value,
+                                                model=self.copasi_model)
+                # if param is a species
+                else:
+                    basico.model_info.set_species(name=param_name,
+                                                exact=True,
+                                                initial_concentration=param_value,
+                                                model=self.copasi_model)
 
         # Run the simulation and return results
         df_result = basico.run_time_course(model=self.copasi_model,
