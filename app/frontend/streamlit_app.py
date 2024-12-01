@@ -145,7 +145,6 @@ with main_col1:
             index=0,
             key="st_selectbox_llm"
         )
-        print (llm_option, 'llm_option')
 
         # Upload files
         uploaded_file = st.file_uploader(
