@@ -32,8 +32,8 @@ repo_url: https://github.com/VirtualPatientEngine/AIAgents4Pharma
 repo_name: AIAgents4Pharma
 
 theme:
-  # favicon: docs/VPE.png
-  logo: 🤖
+  logo: ./robot.png
+  #logo: 🤖
   icon:
     annotation: material/plus-circle 
     repo: fontawesome/brands/github
