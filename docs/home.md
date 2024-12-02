@@ -4,11 +4,11 @@ Welcome to **AIAgents4Pharma** – an open-source project by [Team VPE](https://
 
 Our toolkit currently consists of three intelligent agents, each designed to simplify and enhance access to specialized data in biology:
 
-- [**Talk2BioModels**](talk2biomodels/models/heading.md): Engage directly with mathematical models in systems biology.
+- [**Talk2BioModels**](talk2biomodels/models/intro.md): Engage directly with mathematical models in systems biology.
 
-- [**Talk2Cells**](talk2cells/heading.md) *(Coming soon)*: Query and analyze sequencing data with ease.
+- [**Talk2Cells**](talk2cells/intro.md) *(Coming soon)*: Query and analyze sequencing data with ease.
 
-- [**Talk2KnowledgeGraphs**](Talk2KnowledgeGraphs/heading.md) *(Coming soon)*: Access and explore complex biological knowledge graphs for insightful data connections.
+- [**Talk2KnowledgeGraphs**](Talk2KnowledgeGraphs/intro.md) *(Coming soon)*: Access and explore complex biological knowledge graphs for insightful data connections.
 
 ## Getting Started
 

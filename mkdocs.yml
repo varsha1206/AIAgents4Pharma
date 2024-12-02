@@ -4,7 +4,7 @@ nav:
   - Home:
       - Home : home.md
   - Talk2Biomodels : 
-      - Talk2Biomodels: talk2biomodels/models/heading.md
+      - Talk2Biomodels: talk2biomodels/models/intro.md
       - Models :
         - System Bio Model: talk2biomodels/models/sys_bio_model.md
         - Basico Model : talk2biomodels/models/basico_model.md 
@@ -15,14 +15,14 @@ nav:
         - Simulate Model : talk2biomodels/tools/simulate_model.md         
 
   - Talk2cells :
-      - Talk2cells: talk2cells/heading.md
+      - Talk2cells: talk2cells/intro.md
 
   - Talk2knowledgegraphs :
-      - Talk2knowledgegraphs: Talk2KnowledgeGraphs/heading.md 
+      - Talk2knowledgegraphs: Talk2KnowledgeGraphs/intro.md 
 
   - Documentation : 
     - Ops :      
-        - Ops : Documentation_heading.md    
+        - Ops : Documentation_intro.md    
         - CodeOps : ops/CodeOps.md
         - DevOps : ops/DevOps.md   
     - Contributing :
