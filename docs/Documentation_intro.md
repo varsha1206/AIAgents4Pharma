@@ -1,1 +1,0 @@
-## **[CodeOps](./ops/CodeOps.md) and [DevOps](./ops/DevOps.md)** Documentation

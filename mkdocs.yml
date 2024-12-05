@@ -1,8 +1,12 @@
 site_name: AIAgents4Pharma
 
 nav:
-  - Home:
-      - Home : home.md
+  - Home: 
+      - Home: home.md
+      - Getting Started: 
+        - Overview: notebooks/overview.md
+        - Importing the Package: notebooks/hello.ipynb
+
   - Talk2Biomodels : 
       - Talk2Biomodels: talk2biomodels/models/intro.md
       - Models :
@@ -22,31 +26,20 @@ nav:
 
   - Documentation : 
     - Ops :      
-        - Ops : Documentation_intro.md    
+        - Ops : ops/Documentation_intro.md    
         - CodeOps : ops/CodeOps.md
         - DevOps : ops/DevOps.md   
     - Contributing :
-        - Contributing : CONTRIBUTING.md    
+        - Contributing : CONTRIBUTING.md 
 
 repo_url: https://github.com/VirtualPatientEngine/AIAgents4Pharma
 repo_name: AIAgents4Pharma
 
+extra_css:
+  - VPE.png
 theme:
+  name: material
   logo: ./robot.png
-  #logo: 🤖
-  icon:
-    annotation: material/plus-circle 
-    repo: fontawesome/brands/github
-
-  extra:
-    alternate:
-      - name: English
-        link: /en/ 
-        lang: en
-      - name: Deutsch
-        link: /de/
-        lang: de
-
   palette:
     - scheme: default
       toggle:
@@ -56,47 +49,26 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-
-  name: material
-  features :
-  - naviation.tabs.sticky
-  - navigation.tabs
-  - navigation.expand
-  - navigation.instant
-  - navigation.sections
-  - navigation.path
-  # - toc.integrate
-  - toc.follow
-  - navigation.tracking
-  - navigation.instant.prefetch
-  - navigation.instant.progress
-  - navigation.instant.preview
-  - navigation.top
-  - search.suggest
-  - search.heighlight
-  - search.share
-  - content.code.copy
-  - header.autohide
-
+  features:
+    - navigation.tabs
+    - navigation.instant
+    - navigation.expand
+    - search.suggest
+    - search.highlight
+    - content.code.copy
 
 plugins:
-  # - search
-  - tags
-  - mkdocstrings
-  # - social:
-  #   cards_layout: default/variant
   - search:
-      lang: 
+      lang:
         - en
         - de
-
-
+  - mkdocstrings      
+  - mkdocs-jupyter
+  - tags
 
 markdown_extensions:
   - pymdownx.highlight:
-        anchor_linenums: true
-        line_spans: __span
-        pygments_lang_class: true
-  - pymdownx.inlinehilite
-  - pymdownx.snippets
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
   - pymdownx.superfences
