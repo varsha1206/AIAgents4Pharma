@@ -67,7 +67,7 @@ class PrimeKGLoaderTool(BaseTool):
         if os.path.exists(local_full_path):
             print(f"{local_full_path} already exists. Loading the data from the local directory.")
 
-            # Store the dataframes
+            # Load the dataframes
             primekg_nodes = pd.read_csv(os.path.join(local_dir, f"{name}_nodes.tsv.gz"),
                                         sep='\t', compression='gzip')
             primekg_edges = pd.read_csv(os.path.join(local_dir, f"{name}_edges.tsv.gz"),
