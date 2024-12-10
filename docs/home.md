@@ -1,4 +1,4 @@
-<h1 align="center" style="border-bottom: none;">🤖 AIAgents4Pharma</h1>
+<h1 align="center" style="border-bottom: none; font-weight: bold;">🤖 AIAgents4Pharma</h1>
 
 Welcome to **AIAgents4Pharma** – an open-source project by [Team VPE](https://github.com/VirtualPatientEngine) that brings together AI-driven tools to help researchers and pharma interact seamlessly with complex biological data.
 
@@ -10,7 +10,7 @@ Our toolkit currently consists of three intelligent agents, each designed to sim
 
 - [**Talk2KnowledgeGraphs**](Talk2KnowledgeGraphs/intro.md) *(Coming soon)*: Access and explore complex biological knowledge graphs for insightful data connections.
 
-## Getting Started
+## **Getting Started**
 
 ### Prerequisites
 
@@ -44,7 +44,7 @@ Our toolkit currently consists of three intelligent agents, each designed to sim
 
 For detailed instructions on each agent, please refer to their respective folders.
 
-## Contributing
+## **Contributing**
 
 We welcome contributions to AIAgents4Pharma! Here’s how you can help:
 

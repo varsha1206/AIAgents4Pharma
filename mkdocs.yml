@@ -3,12 +3,11 @@ site_name: AIAgents4Pharma
 nav:
   - Home: 
       - Home: home.md
-      - Getting Started: 
-        - Overview: notebooks/overview.md
-        - Importing the Package: notebooks/hello.ipynb
 
   - Talk2Biomodels : 
       - Talk2Biomodels: talk2biomodels/models/intro.md
+      - Getting Started: 
+        - Tutorial 1: ./notebooks/talk2biomodels/Tools.ipynb
       - Models :
         - System Bio Model: talk2biomodels/models/sys_bio_model.md
         - Basico Model : talk2biomodels/models/basico_model.md 
@@ -56,19 +55,25 @@ theme:
     - search.suggest
     - search.highlight
     - content.code.copy
-
+    - navigation.scrollable
 plugins:
   - search:
       lang:
         - en
         - de
   - mkdocstrings      
-  - mkdocs-jupyter
+  - mkdocs-jupyter:
+      include_source: True
   - tags
+  - include-markdown
 
 markdown_extensions:
-  - pymdownx.highlight:
-      anchor_linenums: true
-      line_spans: __span
-      pygments_lang_class: true
+  - pymdownx.highlight
+      # anchor_linenums: true
+      # line_spans: __span
+      # pygments_lang_class: true
   - pymdownx.superfences
+
+extra:
+  notebooks:
+    - overview.md: notebooks/overview.md

@@ -20,7 +20,7 @@ In this section, you'll explore the following topics:
 ## Getting Started
 
 To follow along with the notebooks:
-1. Install the package by following the instructions in the [Importing the Package](./hello.ipynb) notebook.
+1. Install the package by following the instructions in the [Importing the Package](./Tools.ipynb) notebook.
 
 ---
 
