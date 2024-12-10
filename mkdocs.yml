@@ -7,7 +7,7 @@ nav:
   - Talk2Biomodels : 
       - Talk2Biomodels: talk2biomodels/models/intro.md
       - Getting Started: 
-        - Tutorial 1: ./notebooks/talk2biomodels/Tools.ipynb
+        - Tutorial 1: ./notebooks/talk2biomodels/Tutorial.ipynb
       - Models :
         - System Bio Model: talk2biomodels/models/sys_bio_model.md
         - Basico Model : talk2biomodels/models/basico_model.md 
