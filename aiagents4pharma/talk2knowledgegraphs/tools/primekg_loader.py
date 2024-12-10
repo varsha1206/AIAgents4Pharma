@@ -22,7 +22,7 @@ class PrimeKGData:
     """
     name: Optional[str] = "primekg"
     server_path: Optional[str] = "https://dataverse.harvard.edu/api/access/datafile/"
-    file_id: Optional[int] = 6180626
+    file_id: Optional[int] = 6180620
     local_dir: Optional[str] = "../../../data/primekg/"
 
 class PrimeKGLoaderInput(BaseModel):
@@ -89,40 +89,58 @@ class PrimeKGLoaderTool(BaseTool):
 
             # Prepare nodes
             primekg_nodes = pd.concat([
-                primekg_df[['x_name', 'x_id', 'x_type', 'x_source']].rename(
-                    columns={'x_name':'node',
-                            'x_id':'node_uid',
-                            'x_type':'node_type',
-                            'x_source':'node_source'}),
-                primekg_df[['y_name', 'y_id', 'y_type', 'y_source']].rename(
-                    columns={'y_name':'node',
-                            'y_id':'node_uid',
-                            'y_type':'node_type',
-                            'y_source':'node_source'})], axis=0)
+                primekg_df[['x_index', 'x_name', 'x_id', 'x_type', 'x_source',]].rename(
+                    columns={
+                        'x_index': 'node_index',
+                        'x_name':'node',
+                        'x_id':'node_uid',
+                        'x_type':'node_type',
+                        'x_source':'node_source'
+                    }),
+                primekg_df[['y_index', 'y_name', 'y_id', 'y_type', 'y_source']].rename(
+                    columns={
+                        'y_index': 'node_index',
+                        'y_name':'node',
+                        'y_id':'node_uid',
+                        'y_type':'node_type',
+                        'y_source':'node_source'
+                    })
+            ], axis=0)
             primekg_nodes['node_id'] = primekg_nodes['node']
             primekg_nodes['node_uid'] = primekg_nodes['node_source'].astype(str) + ':' +\
                 primekg_nodes['node_uid'].astype(str)
             primekg_nodes.drop(['node_source'], axis=1)
             primekg_nodes.drop_duplicates(inplace=True)
-            primekg_nodes = primekg_nodes[['node',
-                                        'node_id',
-                                        'node_uid',
-                                        'node_type']]
+            primekg_nodes = primekg_nodes[['node_index',
+                                           'node',
+                                           'node_id',
+                                           'node_uid',
+                                           'node_type']]
 
             # Prepare edges
-            primekg_edges = primekg_df[['x_name', 'y_name', 'display_relation']].rename(
-                columns={'x_name':'node_source',
-                        'y_name':'node_target',
-                        'display_relation':'edge_type'})
+            primekg_edges = primekg_df[['x_index',
+                                        'x_name',
+                                        'y_index',
+                                        'y_name',
+                                        'display_relation']].rename(
+                columns={
+                    'x_index':'node_source_index',
+                    'x_name':'node_source',
+                    'y_index':'node_target_index',
+                    'y_name':'node_target',
+                    'display_relation':'edge_type'
+                })
             primekg_edges['node_source_uid'] = primekg_df['x_source'].astype(str) + ':' +\
                 primekg_df['x_id'].astype(str)
             primekg_edges['node_target_uid'] = primekg_df['y_source'].astype(str) + ':' +\
                 primekg_df['y_id'].astype(str)
-            primekg_edges = primekg_edges[['node_source',
-                                        'node_source_uid',
-                                        'node_target',
-                                        'node_target_uid',
-                                        'edge_type']]
+            primekg_edges = primekg_edges[['node_source_index',
+                                           'node_source',
+                                           'node_source_uid',
+                                           'node_target_index',
+                                           'node_target',
+                                           'node_target_uid',
+                                           'edge_type']]
             primekg_edges['edge_type'] = primekg_edges['edge_type'].apply(
                 lambda x: x.replace(' ', '_')
             )

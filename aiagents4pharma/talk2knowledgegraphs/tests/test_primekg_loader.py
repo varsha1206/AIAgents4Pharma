@@ -19,7 +19,7 @@ def primekg_data_fixture():
     """
     return PrimeKGData(name="primekg",
                        server_path="https://dataverse.harvard.edu/api/access/datafile/",
-                       file_id=6180626,
+                       file_id=6180620,
                        local_dir=LOCAL_DIR)
 
 @pytest.fixture(name="primekg_loader_input")
