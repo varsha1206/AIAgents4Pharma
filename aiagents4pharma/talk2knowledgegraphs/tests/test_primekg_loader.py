@@ -50,12 +50,12 @@ def test_download_primekg(primekg_loader_input, primekg_loader_tool):
     # Check if the local directory exists
     assert os.path.exists(primekg_loader_input.data.local_dir)
     # Check if downloaded and processed files exist
-    path = f"{primekg_loader_input.data.local_dir}/{primekg_loader_input.data.name}.csv"
-    assert os.path.exists(path)
-    path = f"{primekg_loader_input.data.local_dir}/{primekg_loader_input.data.name}_nodes.tsv.gz"
-    assert os.path.exists(path)
-    path = f"{primekg_loader_input.data.local_dir}/{primekg_loader_input.data.name}_edges.tsv.gz"
-    assert os.path.exists(path)
+    files = [f"{primekg_loader_input.data.name}.csv",
+             f"{primekg_loader_input.data.name}_nodes.tsv.gz",
+             f"{primekg_loader_input.data.name}_edges.tsv.gz"]
+    for file in files:
+        path = f"{primekg_loader_input.data.local_dir}/{file}"
+        assert os.path.exists(path)
     # Check processed PrimeKG dataframes
     # Nodes
     assert primekg_nodes is not None
@@ -80,12 +80,12 @@ def test_load_existing_primekg(primekg_loader_input, primekg_loader_tool):
     # Check if the local directory exists
     assert os.path.exists(primekg_loader_input.data.local_dir)
     # Check if downloaded and processed files exist
-    path = f"{primekg_loader_input.data.local_dir}/{primekg_loader_input.data.name}.csv"
-    assert os.path.exists(path)
-    path = f"{primekg_loader_input.data.local_dir}/{primekg_loader_input.data.name}_nodes.tsv.gz"
-    assert os.path.exists(path)
-    path = f"{primekg_loader_input.data.local_dir}/{primekg_loader_input.data.name}_edges.tsv.gz"
-    assert os.path.exists(path)
+    files = [f"{primekg_loader_input.data.name}.csv",
+             f"{primekg_loader_input.data.name}_nodes.tsv.gz",
+             f"{primekg_loader_input.data.name}_edges.tsv.gz"]
+    for file in files:
+        path = f"{primekg_loader_input.data.local_dir}/{file}"
+        assert os.path.exists(path)
     # Check processed PrimeKG dataframes
     # Nodes
     assert primekg_nodes is not None

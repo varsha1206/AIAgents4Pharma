@@ -44,9 +44,9 @@ class PrimeKGLoaderTool(BaseTool):
              name: str,
              server_path: str,
              file_id: int,
-             local_dir: str):
+             local_dir: str) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
-        Method for running the KnowledgeGraphLoader tool.
+        Method for running the PrimeKGLoaderTool tool.
 
         Args:
             name (str): The name of the PrimeKG.
@@ -56,7 +56,7 @@ class PrimeKGLoaderTool(BaseTool):
             local_dir (str): The local directory of the PrimeKG.
 
         Returns:
-            str: The status of the PrimeKG loading.
+            tuple: The PrimeKG nodes and edges dataframes.
         """
         # Make the directory if it doesn't exist
         os.makedirs(os.path.dirname(local_dir), exist_ok=True)
@@ -157,7 +157,7 @@ class PrimeKGLoaderTool(BaseTool):
                  name: str,
                  server_path: str,
                  file_id: int,
-                 local_dir: str):
+                 local_dir: str) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
         Run the tool.
 
@@ -168,7 +168,7 @@ class PrimeKGLoaderTool(BaseTool):
             local_dir (str): The local directory of the PrimeKG.
 
         Returns:
-            str: The status of the PrimeKG loading.
+            tuple: The PrimeKG nodes and edges dataframes.
         """
         return self._run(name=name,
                          server_path=server_path,
