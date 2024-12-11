@@ -1,0 +1,79 @@
+site_name: AIAgents4Pharma
+
+nav:
+  - Home: 
+      - Home: home.md
+
+  - Talk2Biomodels : 
+      - Talk2Biomodels: talk2biomodels/models/intro.md
+      - Getting Started: 
+        - Tutorial 1: ./notebooks/talk2biomodels/Tutorial.ipynb
+      - Models :
+        - System Bio Model: talk2biomodels/models/sys_bio_model.md
+        - Basico Model : talk2biomodels/models/basico_model.md 
+      - Tools :
+        - Asking question : talk2biomodels/tools/ask_question.md  
+        - Model Description : talk2biomodels/tools/model_description.md 
+        - Plotting Figure : talk2biomodels/tools/plot_figure.md  
+        - Simulate Model : talk2biomodels/tools/simulate_model.md         
+
+  - Talk2cells :
+      - Talk2cells: talk2cells/intro.md
+
+  - Talk2knowledgegraphs :
+      - Talk2knowledgegraphs: Talk2KnowledgeGraphs/intro.md 
+
+  - Documentation : 
+    - Ops :      
+        - Ops : ops/Documentation_intro.md    
+        - CodeOps : ops/CodeOps.md
+        - DevOps : ops/DevOps.md   
+    - Contributing :
+        - Contributing : CONTRIBUTING.md 
+
+repo_url: https://github.com/VirtualPatientEngine/AIAgents4Pharma
+repo_name: AIAgents4Pharma
+
+extra_css:
+  - VPE.png
+theme:
+  name: material
+  logo: ./robot.png
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.instant
+    - navigation.expand
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - navigation.scrollable
+plugins:
+  - search:
+      lang:
+        - en
+        - de
+  - mkdocstrings      
+  - mkdocs-jupyter:
+      include_source: True
+  - tags
+  - include-markdown
+
+markdown_extensions:
+  - pymdownx.highlight
+      # anchor_linenums: true
+      # line_spans: __span
+      # pygments_lang_class: true
+  - pymdownx.superfences
+
+extra:
+  notebooks:
+    - overview.md: notebooks/overview.md
