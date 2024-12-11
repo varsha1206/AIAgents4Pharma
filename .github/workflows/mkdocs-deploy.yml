@@ -20,7 +20,7 @@ jobs:
       - name: Install the requirements
         shell: bash -l {0}
         run: |
-          pip3 install mkdocs mkdocs-material mkdocs-material-extensions mkdocstrings mkdocstrings-python
+          pip3 install mkdocs mkdocs-material mkdocs-material-extensions mkdocstrings mkdocstrings-python mkdocs-include-markdown-plugin mkdocs-jupyter
       - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV 
       - uses: actions/cache@v3
         with:
@@ -29,4 +29,4 @@ jobs:
           restore-keys: |
             mkdocs-material-
       - run: pip install mkdocs-material 
-      - run: mkdocs gh-deploy --clean --force
+      - run: mkdocs gh-deploy --clean --force 
