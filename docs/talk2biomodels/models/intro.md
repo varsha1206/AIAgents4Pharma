@@ -1,7 +1,6 @@
-# **Welcome to Talk2BioModels**
+# Talk2BioModels
 
-"Empowering Researchers"
-    **Talk2BioModels** revolutionizes how researchers interact with biological models. No coding or mathematical expertise is required—focus on **analysis** and **interpretation**, not programming!
+**Talk2BioModels** is an AI-agent designed to interact with mathematical models in systems biology. You can choose to either interact with a model available in the BioModels database or upload your own model.
 
 ---
 
@@ -9,32 +8,15 @@
 
 Biological models are critical for understanding complex biological mechanisms, yet they often remain inaccessible to those without a programming or mathematical background. **Talk2BioModels** bridges this gap by offering:
 
-- **Natural Language Interaction**: Ask questions or make requests directly.
-- **Streamlined Simulations**: Forward simulation of both internal and open-source models (e.g., BioModels).
+- **Natural Language Interaction**: Simulate or ask questions to mathematical models directly.
+- **Streamlined Simulations**: Forward simulation of both internal and open-source models (e.g., BioModels database).
 - **Dynamic Adjustments**: Modify model parameters to simulate diverse conditions.
 - **Powerful Queries**: Effortlessly retrieve and analyze simulation results.
 
----
+### How to access Talk2BioModels?
 
-### Key Features
+There are 2 ways to access Talk2BioModels:
 
-- **Simplified Access**:
-    - No coding required—use natural language to interact with models.
-- **Flexible Simulations**:
-    - Simulate and analyze models under different conditions by adjusting parameters.
-- **Efficient Insights**:
-    - Query simulation results directly and focus on your research goals.
-
----
-
-### Getting Started
-Ready to dive in? Learn how to:
-
-1. Forward simulate models.
-
-2. Adjust parameters and run custom simulations.
-
-3. Query results in seconds.
-
-Explore the full tutorial for step-by-step guidance!
+- **Set up the Streamlit app**: Follow the instructions on the home page to set up an launch the Streamlit app.
+- **Use the PyPI package**: Follow the tutorial for step-by-step guidance on how to use the PyPI package.
 

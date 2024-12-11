@@ -123,28 +123,6 @@ class ModelDescriptionTool(BaseTool):
         return chain.invoke({"description": description,
                              "question": question})
 
-    def call_run(self,
-            question: str,
-            sys_bio_model: ModelData = ModelData(),
-            st_session_key: str = None,
-            run_manager: Optional[CallbackManagerForToolRun] = None) -> str:
-        """
-        Run the tool.
-
-        Args:
-            question (str): The question to ask about the model description.
-            sys_bio_model (ModelData): The model data.
-            st_session_key (str): The Streamlit session key.
-            run_manager (Optional[CallbackManagerForToolRun]): The CallbackManagerForToolRun object.
-        
-        Returns:
-            str: The answer to the question
-        """
-        return self._run(question=question,
-                         sys_bio_model=sys_bio_model,
-                         st_session_key=st_session_key,
-                         run_manager=run_manager)
-
     def get_metadata(self):
         """
         Get metadata for the tool.

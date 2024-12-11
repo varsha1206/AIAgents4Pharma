@@ -1,16 +1,14 @@
-<h1 align="center" style="border-bottom: none; font-weight: bold;">🤖 AIAgents4Pharma</h1>
+<h1 align="center" style="font-weight: bold;">🤖 AIAgents4Pharma</h1>
 
 Welcome to **AIAgents4Pharma** – an open-source project by [Team VPE](https://github.com/VirtualPatientEngine) that brings together AI-driven tools to help researchers and pharma interact seamlessly with complex biological data.
 
-Our toolkit currently consists of three intelligent agents, each designed to simplify and enhance access to specialized data in biology:
+Our toolkit currently consists of three agents, each designed to simplify and enhance access to complex data in biology:
 
 - [**Talk2BioModels**](talk2biomodels/models/intro.md): Engage directly with mathematical models in systems biology.
 
 - [**Talk2Cells**](talk2cells/intro.md) *(Coming soon)*: Query and analyze sequencing data with ease.
 
 - [**Talk2KnowledgeGraphs**](Talk2KnowledgeGraphs/intro.md) *(Coming soon)*: Access and explore complex biological knowledge graphs for insightful data connections.
-
-## **Getting Started**
 
 ### Prerequisites
 
@@ -20,31 +18,36 @@ Our toolkit currently consists of three intelligent agents, each designed to sim
 
 ### Installation
 
-1. **Clone the repository:**
+#### Option 1: PyPI
+   ```bash
+   pip install aiagents4pharma
+   ```
+
+Check out the tutorials on each agent for detailed instrcutions.
+
+#### Option 2: Git
+1. Clone the repository:
    ```bash
    git clone https://github.com/VirtualPatientEngine/AIAgents4Pharma
    cd AIAgents4Pharma
    ```
 
-2. **Install dependencies:**
+2. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Initialize OPENAI_API_KEY**
+3. Initialize OPENAI_API_KEY
    ```bash
    export OPENAI_API_KEY = ....
    ```
 
-4. **Launch the agent:**
-   To launch the Talk2BioModels agent, run:
+4. Launch Streamlit:
    ```bash
    streamlit run app/frontend/streamlit_app.py
    ```
 
-For detailed instructions on each agent, please refer to their respective folders.
-
-## **Contributing**
+### Contributing
 
 We welcome contributions to AIAgents4Pharma! Here’s how you can help:
 
@@ -55,5 +58,3 @@ We welcome contributions to AIAgents4Pharma! Here’s how you can help:
 5. **Open a pull request**
 
 Check out our [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
-
-
