@@ -43,7 +43,7 @@ def test_download_starkqa_primekg(starkqa_primekg_loader_input, starkqa_primekg_
     Test the _run method of the StarkQAPrimeKGLoaderTool class by downloading files
     from HuggingFace Hub.
     """
-    starkqa_df, split_idx = starkqa_primekg_loader_tool.call_run(
+    starkqa_df, primekg_node_info, split_idx = starkqa_primekg_loader_tool.call_run(
         repo_id=starkqa_primekg_loader_input.data.repo_id,
         local_dir=starkqa_primekg_loader_input.data.local_dir
     )
@@ -56,7 +56,8 @@ def test_download_starkqa_primekg(starkqa_primekg_loader_input, starkqa_primekg_
              'qa/prime/split/train.index',
              'qa/prime/split/val.index',
              'qa/prime/stark_qa/stark_qa.csv',
-             'qa/prime/stark_qa/stark_qa_human_generated_eval.csv']
+             'qa/prime/stark_qa/stark_qa_human_generated_eval.csv',
+             'skb/prime/processed.zip']
     for file in files:
         path = f"{starkqa_primekg_loader_input.data.local_dir}/{file}"
         assert os.path.exists(path)
@@ -64,6 +65,9 @@ def test_download_starkqa_primekg(starkqa_primekg_loader_input, starkqa_primekg_
     assert starkqa_df is not None
     assert len(starkqa_df) > 0
     assert starkqa_df.shape[0] == 11204
+    # Check node information
+    assert primekg_node_info is not None
+    assert len(primekg_node_info) == 129375
     # Check split indices
     assert list(split_idx.keys()) == ['train', 'val', 'test', 'test-0.1']
     assert len(split_idx['train']) == 6162
@@ -77,7 +81,7 @@ def test_load_existing_starkqa_primekg(starkqa_primekg_loader_input, starkqa_pri
     Test the _run method of the StarkQAPrimeKGLoaderTool class by loading existing files
     in the local directory.
     """
-    starkqa_df, split_idx = starkqa_primekg_loader_tool.call_run(
+    starkqa_df, primekg_node_info, split_idx = starkqa_primekg_loader_tool.call_run(
         repo_id=starkqa_primekg_loader_input.data.repo_id,
         local_dir=starkqa_primekg_loader_input.data.local_dir
     )
@@ -90,7 +94,8 @@ def test_load_existing_starkqa_primekg(starkqa_primekg_loader_input, starkqa_pri
              'qa/prime/split/train.index',
              'qa/prime/split/val.index',
              'qa/prime/stark_qa/stark_qa.csv',
-             'qa/prime/stark_qa/stark_qa_human_generated_eval.csv']
+             'qa/prime/stark_qa/stark_qa_human_generated_eval.csv',
+             'skb/prime/processed.zip']
     for file in files:
         path = f"{starkqa_primekg_loader_input.data.local_dir}/{file}"
         assert os.path.exists(path)
@@ -98,6 +103,9 @@ def test_load_existing_starkqa_primekg(starkqa_primekg_loader_input, starkqa_pri
     assert starkqa_df is not None
     assert len(starkqa_df) > 0
     assert starkqa_df.shape[0] == 11204
+    # Check node information
+    assert primekg_node_info is not None
+    assert len(primekg_node_info) == 129375
     # Check split indices
     assert list(split_idx.keys()) == ['train', 'val', 'test', 'test-0.1']
     assert len(split_idx['train']) == 6162
