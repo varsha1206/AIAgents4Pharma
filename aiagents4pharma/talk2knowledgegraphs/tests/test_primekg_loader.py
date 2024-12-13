@@ -18,8 +18,6 @@ def primekg_data_fixture():
     Fixture for creating an instance of PrimeKGData.
     """
     return PrimeKGData(name="primekg",
-                       server_path="https://dataverse.harvard.edu/api/access/datafile/",
-                       file_id=6180620,
                        local_dir=LOCAL_DIR)
 
 @pytest.fixture(name="primekg_loader_input")
@@ -43,15 +41,16 @@ def test_download_primekg(primekg_loader_input, primekg_loader_tool):
     primekg_nodes, primekg_edges = primekg_loader_tool.call_run(
         name=primekg_loader_input.data.name,
         server_path=primekg_loader_input.data.server_path,
-        file_id=primekg_loader_input.data.file_id,
+        file_ids=primekg_loader_input.data.file_ids,
         local_dir=primekg_loader_input.data.local_dir
     )
 
     # Check if the local directory exists
     assert os.path.exists(primekg_loader_input.data.local_dir)
     # Check if downloaded and processed files exist
-    files = [f"{primekg_loader_input.data.name}.csv",
+    files = ["nodes.tab",
              f"{primekg_loader_input.data.name}_nodes.tsv.gz",
+             "edges.csv",
              f"{primekg_loader_input.data.name}_edges.tsv.gz"]
     for file in files:
         path = f"{primekg_loader_input.data.local_dir}/{file}"
@@ -73,15 +72,16 @@ def test_load_existing_primekg(primekg_loader_input, primekg_loader_tool):
     primekg_nodes, primekg_edges = primekg_loader_tool.call_run(
         name=primekg_loader_input.data.name,
         server_path=primekg_loader_input.data.server_path,
-        file_id=primekg_loader_input.data.file_id,
+        file_ids=primekg_loader_input.data.file_ids,
         local_dir=primekg_loader_input.data.local_dir
     )
 
     # Check if the local directory exists
     assert os.path.exists(primekg_loader_input.data.local_dir)
     # Check if downloaded and processed files exist
-    files = [f"{primekg_loader_input.data.name}.csv",
+    files = ["nodes.tab",
              f"{primekg_loader_input.data.name}_nodes.tsv.gz",
+             "edges.csv",
              f"{primekg_loader_input.data.name}_edges.tsv.gz"]
     for file in files:
         path = f"{primekg_loader_input.data.local_dir}/{file}"
