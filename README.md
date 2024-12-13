@@ -39,7 +39,14 @@ Our toolkit currently consists of three intelligent agents, each designed to sim
 - Required libraries specified in `requirements.txt`
 
 ### Installation
+#### Option 1: PyPI
+   ```bash
+   pip install aiagents4pharma
+   ```
 
+Check out the tutorials on each agent for detailed instrcutions.
+
+#### Option 2: git
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/VirtualPatientEngine/AIAgents4Pharma
@@ -56,8 +63,28 @@ Our toolkit currently consists of three intelligent agents, each designed to sim
    export OPENAI_API_KEY = ....
    ```
 
-4. **Launch the agent:**
-   To launch the Talk2BioModels agent, run:
+4. **[Optional] Set up login credentials**
+   ```bash
+   vi .streamlit/secrets.toml
+   ```
+   and enter
+   ```
+   password='XXX'
+   ```
+   Please note that the passowrd will be same for all the users.
+
+5. **[Optional] Initialize LANGSMITH_API_KEY**
+   ```bash
+   export LANGCHAIN_TRACING_V2=true
+   export LANGCHAIN_API_KEY=<your-api-key>
+   ```
+   Please note that this will create a new tracing project in your Langsmith 
+   account with the name `<user_name>@<uuid>`, where `user_name` is the name 
+   you provided in the previous step. If you skip the previous step, it will 
+   default to `default`. <uuid> will be the 128 bit unique ID created for the
+   session.
+
+6. **Launch the app:**
    ```bash
    streamlit run app/frontend/streamlit_app.py
    ```
@@ -105,3 +132,8 @@ Check out our [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
 We’re excited to bring AIAgents4Pharma to the bioinformatics and pharmaceutical research community. Together, let’s make data-driven biological research more accessible and insightful. 
 
 **Get Started** with AIAgents4Pharma today and transform the way you interact with biological data.
+
+---
+
+## Feedback
+Questions/Bug reports/Feature requests/Comments/Suggestions? We welcome all. Please use the `Isssues` tab 😀
