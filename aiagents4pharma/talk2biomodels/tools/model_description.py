@@ -20,7 +20,7 @@ class ModelData:
     """
     Dataclass for storing the model data.
     """
-    modelid: Optional[int] = None
+    model_id: Optional[int] = None
     sbml_file_path: Optional[str] = None
     model_object: Optional[BasicoModel] = None
 
@@ -73,12 +73,11 @@ class ModelDescriptionTool(BaseTool):
             str: The answer to the question.
         """
         st_session_key = self.st_session_key
-        print (st_session_key, 'st_session_key')
         # Check if sys_bio_model is provided in the input schema
-        if sys_bio_model.modelid or sys_bio_model.sbml_file_path \
+        if sys_bio_model.model_id or sys_bio_model.sbml_file_path \
             or sys_bio_model.model_object not in [None, "", {}]:
-            if sys_bio_model.modelid:
-                model_object = BasicoModel(model_id=sys_bio_model.modelid)
+            if sys_bio_model.model_id:
+                model_object = BasicoModel(model_id=sys_bio_model.model_id)
             elif sys_bio_model.sbml_file_path:
                 model_object = BasicoModel(sbml_file_path=sys_bio_model.sbml_file_path)
             else:
