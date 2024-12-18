@@ -9,7 +9,10 @@
 ### Prerequisites
 - Python 3.10 or higher
 
-### Installing Talk2BioModels
+### Installing Talk2BioModels in two ways
+
+#### Option 1: Git
+
 1. Clone the repository:
   
     git clone https://github.com/<your-repo>/ aiagents4pharma.git
@@ -22,3 +25,9 @@
 3. Alternatively, install from source:
 
     pip install -e .
+
+
+#### Option 2: PyPI *(coming soon)*
+   ```bash
+   pip install aiagents4pharma 
+   ```
