@@ -85,9 +85,10 @@ def test_call_run_with_different_model_data(input_data, basico_model, model_desc
     assert isinstance(result, str)
     # Test the _run method of the ModelDescriptionTool class with an SBML file.
     input_data = ModelDescriptionInput(question="Describe the model",
-                            sys_bio_model=ModelData(sbml_file_path="./BIOMD0000000064_url.xml"),
-                            st_session_key="test_key"
-                            )
+        sys_bio_model=ModelData(
+            sbml_file_path="aiagents4pharma/talk2biomodels/tests/BIOMD0000000064_url.xml"),
+        st_session_key="test_key"
+        )
     result = model_description_tool.invoke(input={
                                         'question':input_data.question,
                                         'sys_bio_model':input_data.sys_bio_model,

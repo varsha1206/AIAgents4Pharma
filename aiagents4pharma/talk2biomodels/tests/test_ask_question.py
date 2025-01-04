@@ -13,7 +13,10 @@ def ask_question_tool_fixture():
     Fixture for creating an instance of AskQuestionTool.
     '''
     return AskQuestionTool(st_session_key="test_key",
-                           sys_bio_model=ModelData(sbml_file_path="./BIOMD0000000064_url.xml"))
+        sys_bio_model=ModelData(
+            sbml_file_path="aiagents4pharma/talk2biomodels/tests//BIOMD0000000064_url.xml"
+            )
+            )
 
 @pytest.fixture(name="ask_question_tool_with_model_id")
 def ask_question_tool__with_model_id_fixture():
