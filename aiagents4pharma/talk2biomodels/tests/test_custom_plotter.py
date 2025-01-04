@@ -33,7 +33,7 @@ def test_tool(custom_plotter_tool):
     assert response == "Please run the simulation first before plotting the figure."
     st.session_state[ST_SESSION_KEY].simulate()
     response = custom_plotter.invoke(input={
-                    'question': 'Plot only Th cells related species'
+                    'question': 'Plot only T helper cells related species'
                     })
     assert response.startswith("No species found in the simulation")
     response = custom_plotter.invoke(input={
