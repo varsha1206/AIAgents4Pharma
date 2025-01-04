@@ -81,7 +81,7 @@ def test_run_with_valid_sbml_file_path(simulate_model_tool):
     Test the _run method of the SimulateModelTool class 
     with a valid SBML file path.
     '''
-    sbml_file_path="./BIOMD0000000064.xml"
+    sbml_file_path="aiagents4pharma/talk2biomodels/tests/BIOMD0000000064.xml"
     model_data=ModelData(sbml_file_path=sbml_file_path)
     time_data=TimeData(duration=100.0, interval=10)
     species_data=SpeciesData(species_name=["Pyruvate"], species_concentration=[1.0])
