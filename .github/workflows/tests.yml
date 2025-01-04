@@ -69,13 +69,15 @@ jobs:
     - name: Install dependencies
       run: pip3 install -r requirements.txt  # Adjust this according to your project
 
-    - name: Run tests with coverage
-      run: |
-        cd aiagents4pharma/talk2biomodels/tests/
-        coverage run -m pytest --cache-clear test_*
+    # - name: Run tests with coverage
+    #   run: |
+    #     cd aiagents4pharma/talk2biomodels/tests/
+    #     coverage run -m pytest --cache-clear test_*
 
     - name: Check coverage
       run: |
+        cd aiagents4pharma/talk2biomodels/tests/
+        coverage run -m pytest --cache-clear test_*
         coverage report -m
         TOTAL_COVERAGE=$(coverage report -m | awk 'END {print int($NF)}')
         if [[ $TOTAL_COVERAGE -ne 100 ]]; then
@@ -106,13 +108,15 @@ jobs:
     - name: Install dependencies
       run: pip3 install -r requirements.txt  # Adjust this according to your project
 
-    - name: Run tests with coverage
-      run: |
-        cd aiagents4pharma/talk2biomodels/tests/
-        coverage run -m pytest --cache-clear test_*
+    # - name: Run tests with coverage
+    #   run: |
+    #     cd aiagents4pharma\talk2biomodels\tests\
+    #     coverage run -m pytest --cache-clear test_*
 
     - name: Check coverage
       run: |
+        cd aiagents4pharma\talk2biomodels\tests\
+        coverage run -m pytest --cache-clear test_*
         coverage report -m
         # $TOTAL_COVERAGE=(& coverage report -m | Select-Object -Last 1) -replace "[^\d]"  # Extract the last line and remove non-numeric characters
         $TOTAL_COVERAGE=(& coverage report -m | Select-Object -Last 1)
