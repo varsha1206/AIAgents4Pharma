@@ -161,3 +161,6 @@ cython_debug/
 
 # Vector DB files
 experiment/web/vectordb
+
+# Streamlit
+.streamlit/secrets.toml
