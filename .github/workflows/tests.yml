@@ -1,127 +1,64 @@
-# This is a basic workflow to help you get started with GitHub Actions
-name: TESTS
+# This is a main workflow to trigger GitHub Actions for specific directories in the repository.
+name: Main Tests
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events
   pull_request:
     branches: [ main ]
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-env:
-  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-
-# This workflow contains 3 jobs called:
-# 1. pylint-windows-ubuntu-macos
-# 2. code-cov-ubuntu-macos
-# 3. code-cov-windows
 jobs:
-  pylint-windows-ubuntu-macos:
-    # The type of runner that the job will run on
-    name: pylint-windows-ubuntu-macos
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-        matrix:
-            os: [windows-latest, ubuntu-latest, macos-latest]
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+  check-paths:
+    runs-on: ubuntu-latest
+    outputs:
+      talk2biomodels: ${{ steps.set-vars.outputs.talk2biomodels }}
+      talk2cells: ${{ steps.set-vars.outputs.talk2cells }}
+      talk2knowledgegraphs: ${{ steps.set-vars.outputs.talk2knowledgegraphs }}
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.12
-
-      # install requirements
-      - name: Install the requirements
-        shell: bash -l {0}
+      - name: Check changed files
+        id: set-vars
         run: |
-          pip3 install --break-system-packages -r requirements.txt
+          echo "Checking for changes in specific aiagents4pharma directories..."
+          talk2biomodels=false
+          talk2cells=false
+          talk2knowledgegraphs=false
+          if git diff --name-only HEAD^ HEAD | grep -q '^aiagents4pharma/talk2biomodels/'; then
+            talk2biomodels=true
+          fi
+          if git diff --name-only HEAD^ HEAD | grep -q '^aiagents4pharma/talk2cells/'; then
+            talk2cells=true
+          fi
+          if git diff --name-only HEAD^ HEAD | grep -q '^aiagents4pharma/talk2knowledgegraphs/'; then
+            talk2knowledgegraphs=true
+          fi
+          echo "::set-output name=talk2biomodels::$talk2biomodels"
+          echo "::set-output name=talk2cells::$talk2cells"
+          echo "::set-output name=talk2knowledgegraphs::$talk2knowledgegraphs"
 
-      # pylint
-      - name: Run pylint
-        shell: bash -l {0}
+  trigger-talk2biomodels:
+    needs: check-paths
+    runs-on: ubuntu-latest
+    if: ${{ needs.check-paths.outputs.talk2biomodels == 'true' }}
+    steps:
+      - name: Trigger Talk2BioModels Workflow
         run: |
-          pylint --disable=R0801,R0902,W0221,W0122 aiagents4pharma
+          gh workflow run tests_talk2biomodels.yml
 
-  # code coverage job for ubuntu and macos
-  code-cov-ubuntu-macos:
-    name: code-coverage-ubuntu-macos
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-        matrix:
-          os: [ubuntu-latest, macos-latest]
+  trigger-talk2cells:
+    needs: check-paths
+    runs-on: ubuntu-latest
+    if: ${{ needs.check-paths.outputs.talk2cells == 'true' }}
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Trigger Talk2Cells Workflow
+        run: |
+          gh workflow run tests_talk2cells.yml
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.12
-
-    - name: Install dependencies
-      run: pip3 install -r requirements.txt  # Adjust this according to your project
-
-    - name: Run tests with coverage
-      run: coverage run -m pytest --cache-clear aiagents4pharma/talk2biomodels/tests/
-
-    - name: Check coverage
-      run: |
-        coverage report -m
-        TOTAL_COVERAGE=$(coverage report -m | awk 'END {print int($NF)}')
-        if [[ $TOTAL_COVERAGE -ne 100 ]]; then
-          echo "Code coverage is not 100%. Please check the coverage report."
-          exit 1
-        fi
-      env:
-        COVERAGE_FILE: './.coverage'
-
-  # code coverage job for windows
-  code-cov-windows:
-    name: code-coverage-windows
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-        matrix:
-          os: [windows-latest]
-
+  trigger-talk2knowledgegraphs:
+    needs: check-paths
+    runs-on: ubuntu-latest
+    if: ${{ needs.check-paths.outputs.talk2knowledgegraphs == 'true' }}
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.x
-
-    - name: Install dependencies
-      run: pip3 install -r requirements.txt  # Adjust this according to your project
-
-    - name: Run tests with coverage
-      run: coverage run -m pytest --cache-clear aiagents4pharma/talk2biomodels/tests/
-
-    - name: Check coverage
-      run: |
-        coverage report -m
-        # $TOTAL_COVERAGE=(& coverage report -m | Select-Object -Last 1) -replace "[^\d]"  # Extract the last line and remove non-numeric characters
-        $TOTAL_COVERAGE=(& coverage report -m | Select-Object -Last 1)
-        # split and extract the last element
-        $TOTAL_COVERAGE=($TOTAL_COVERAGE -split " ")[-1]
-        # remove non-numeric characters
-        $TOTAL_COVERAGE=($TOTAL_COVERAGE -replace "[^\d]")
-        # convert to int
-        $TOTAL_COVERAGE=[int]$TOTAL_COVERAGE
-        echo "Total coverage: $TOTAL_COVERAGE"
-        if ($TOTAL_COVERAGE -ne 100) {
-          Write-Host "Code coverage is not 100%. Please check the coverage report."
-          exit 1
-        }
-      env:
-        COVERAGE_FILE: './.coverage'
+      - name: Trigger Talk2Knowledgegraphs Workflow
+        run: |
+          gh workflow run tests_talk2knowledgegraphs.yml
