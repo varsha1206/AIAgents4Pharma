@@ -47,7 +47,7 @@ jobs:
       - name: Run pylint
         shell: bash -l {0}
         run: |
-          pylint --disable=R0801,R0902,W0221,W0122 aiagents4pharma
+          pylint --disable=R0801,R0902,W0221,W0122 aiagents4pharma/talk2biomodels
 
   # code coverage job for ubuntu and macos
   code-cov-ubuntu-macos:
