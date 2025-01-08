@@ -6,6 +6,8 @@ on:
   # Triggers the workflow on push or pull request events
   pull_request:
     branches: [ main ]
+    paths:
+      - 'aiagents4pharma/talk2cells/**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
