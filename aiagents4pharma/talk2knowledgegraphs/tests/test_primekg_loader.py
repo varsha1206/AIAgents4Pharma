@@ -9,8 +9,7 @@ from ..datasets.primekg import PrimeKG
 
 # Remove the data folder for testing if it exists
 LOCAL_DIR = "../data/primekg_test/"
-if os.path.exists(LOCAL_DIR):
-    shutil.rmtree(LOCAL_DIR)
+shutil.rmtree(LOCAL_DIR, ignore_errors=True)
 
 @pytest.fixture(name="primekg")
 def primekg_fixture():

@@ -10,8 +10,7 @@ from ..datasets.biobridge_primekg import BioBridgePrimeKG
 # Remove the data folder for testing if it exists
 PRIMEKG_LOCAL_DIR = "../data/primekg_test/"
 LOCAL_DIR = "../data/biobridge_primekg_test/"
-if os.path.exists(LOCAL_DIR):
-    shutil.rmtree(LOCAL_DIR)
+shutil.rmtree(LOCAL_DIR, ignore_errors=True)
 
 @pytest.fixture(name="biobridge_primekg")
 def biobridge_primekg_fixture():

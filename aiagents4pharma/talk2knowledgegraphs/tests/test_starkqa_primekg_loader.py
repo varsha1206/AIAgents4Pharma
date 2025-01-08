@@ -9,8 +9,7 @@ from ..datasets.starkqa_primekg import StarkQAPrimeKG
 
 # Remove the data folder for testing if it exists
 LOCAL_DIR = "../data/starkqa_primekg_test/"
-if os.path.exists(LOCAL_DIR):
-    shutil.rmtree(LOCAL_DIR)
+shutil.rmtree(LOCAL_DIR, ignore_errors=True)
 
 @pytest.fixture(name="starkqa_primekg")
 def starkqa_primekg_fixture():

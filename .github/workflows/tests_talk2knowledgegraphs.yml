@@ -107,7 +107,7 @@ jobs:
       run: pip3 install -r requirements.txt  # Adjust this according to your project
 
     - name: Run tests with coverage
-      run: coverage run -m pytest --cache-clear aiagents4pharma/talk2knowledgegraphs/tests/
+      run: coverage run --include=aiagents4pharma/talk2knowledgegraphs/* -m pytest --cache-clear aiagents4pharma/talk2knowledgegraphs/tests/
 
     - name: Check coverage
       run: |
