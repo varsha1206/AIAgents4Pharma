@@ -26,7 +26,7 @@ def test_download_primekg(biobridge_primekg):
     Test the loading method of the BioBridge-PrimeKG class by downloading data from repository.
     """
     # Load BioBridge-PrimeKG data
-    biobridge_primekg.load_data(build_neg_triplest=False)
+    biobridge_primekg.load_data()
     primekg_nodes = biobridge_primekg.get_primekg().get_nodes()
     primekg_edges = biobridge_primekg.get_primekg().get_edges()
     biobridge_data_config = biobridge_primekg.get_data_config()
@@ -111,7 +111,7 @@ def test_load_existing_primekg(biobridge_primekg):
     Test the loading method of the BioBridge-PrimeKG class by loading existing data in local.
     """
     # Load BioBridge-PrimeKG data
-    biobridge_primekg.load_data(build_neg_triplest=False)
+    biobridge_primekg.load_data()
     primekg_nodes = biobridge_primekg.get_primekg().get_nodes()
     primekg_edges = biobridge_primekg.get_primekg().get_edges()
     biobridge_data_config = biobridge_primekg.get_data_config()
