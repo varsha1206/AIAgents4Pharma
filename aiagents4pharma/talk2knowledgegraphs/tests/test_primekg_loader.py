@@ -5,55 +5,36 @@ Test cases for primekg_loader.py
 import os
 import shutil
 import pytest
-from ..tools.primekg_loader import PrimeKGData, PrimeKGLoaderInput, PrimeKGLoaderTool
+from ..datasets.primekg import PrimeKG
 
 # Remove the data folder for testing if it exists
 LOCAL_DIR = "../data/primekg_test/"
 if os.path.exists(LOCAL_DIR):
     shutil.rmtree(LOCAL_DIR)
 
-@pytest.fixture(name="primekg_data")
-def primekg_data_fixture():
+@pytest.fixture(name="primekg")
+def primekg_fixture():
     """
-    Fixture for creating an instance of PrimeKGData.
+    Fixture for creating an instance of PrimeKG.
     """
-    return PrimeKGData(name="primekg",
-                       local_dir=LOCAL_DIR)
+    return PrimeKG(local_dir=LOCAL_DIR)
 
-@pytest.fixture(name="primekg_loader_input")
-def primekg_loader_input_fixture(primekg_data):
+def test_download_primekg(primekg):
     """
-    Fixture for creating an instance of PrimeKGLoaderInput.
+    Test the loading method of the PrimeKG class by downloading PrimeKG from server.
     """
-    return PrimeKGLoaderInput(data=primekg_data)
-
-@pytest.fixture(name="primekg_loader_tool")
-def primekg_loader_tool_fixture():
-    """
-    Fixture for creating an instance of PrimeKGLoaderTool.
-    """
-    return PrimeKGLoaderTool()
-
-def test_download_primekg(primekg_loader_input, primekg_loader_tool):
-    """
-    Test the _run method of the PrimeKGLoaderTool class by downloading PrimeKG from server.
-    """
-    primekg_nodes, primekg_edges = primekg_loader_tool.call_run(
-        name=primekg_loader_input.data.name,
-        server_path=primekg_loader_input.data.server_path,
-        file_ids=primekg_loader_input.data.file_ids,
-        local_dir=primekg_loader_input.data.local_dir
-    )
+    # Load PrimeKG data
+    primekg.load_data()
+    primekg_nodes = primekg.get_nodes()
+    primekg_edges = primekg.get_edges()
 
     # Check if the local directory exists
-    assert os.path.exists(primekg_loader_input.data.local_dir)
+    assert os.path.exists(primekg.local_dir)
     # Check if downloaded and processed files exist
-    files = ["nodes.tab",
-             f"{primekg_loader_input.data.name}_nodes.tsv.gz",
-             "edges.csv",
-             f"{primekg_loader_input.data.name}_edges.tsv.gz"]
+    files = ["nodes.tab", f"{primekg.name}_nodes.tsv.gz",
+             "edges.csv", f"{primekg.name}_edges.tsv.gz"]
     for file in files:
-        path = f"{primekg_loader_input.data.local_dir}/{file}"
+        path = f"{primekg.local_dir}/{file}"
         assert os.path.exists(path)
     # Check processed PrimeKG dataframes
     # Nodes
@@ -65,26 +46,22 @@ def test_download_primekg(primekg_loader_input, primekg_loader_tool):
     assert len(primekg_edges) > 0
     assert primekg_edges.shape[0] == 8100498
 
-def test_load_existing_primekg(primekg_loader_input, primekg_loader_tool):
+def test_load_existing_primekg(primekg):
     """
-    Test the _run method of the PrimeKGLoaderTool class by loading existing PrimeKG in local.
+    Test the loading method of the PrimeKG class by loading existing PrimeKG in local.
     """
-    primekg_nodes, primekg_edges = primekg_loader_tool.call_run(
-        name=primekg_loader_input.data.name,
-        server_path=primekg_loader_input.data.server_path,
-        file_ids=primekg_loader_input.data.file_ids,
-        local_dir=primekg_loader_input.data.local_dir
-    )
+    # Load PrimeKG data
+    primekg.load_data()
+    primekg_nodes = primekg.get_nodes()
+    primekg_edges = primekg.get_edges()
 
     # Check if the local directory exists
-    assert os.path.exists(primekg_loader_input.data.local_dir)
+    assert os.path.exists(primekg.local_dir)
     # Check if downloaded and processed files exist
-    files = ["nodes.tab",
-             f"{primekg_loader_input.data.name}_nodes.tsv.gz",
-             "edges.csv",
-             f"{primekg_loader_input.data.name}_edges.tsv.gz"]
+    files = ["nodes.tab", f"{primekg.name}_nodes.tsv.gz",
+             "edges.csv", f"{primekg.name}_edges.tsv.gz"]
     for file in files:
-        path = f"{primekg_loader_input.data.local_dir}/{file}"
+        path = f"{primekg.local_dir}/{file}"
         assert os.path.exists(path)
     # Check processed PrimeKG dataframes
     # Nodes
@@ -95,12 +72,3 @@ def test_load_existing_primekg(primekg_loader_input, primekg_loader_tool):
     assert primekg_edges is not None
     assert len(primekg_edges) > 0
     assert primekg_edges.shape[0] == 8100498
-
-def test_get_metadata(primekg_loader_tool):
-    """
-    Test the get_metadata method of the PrimeKGLoaderTool class.
-    """
-    metadata = primekg_loader_tool.get_metadata()
-    # Check metadata
-    assert metadata["name"] == "primekg_loader"
-    assert metadata["description"] == "A tool to load PrimeKG from Harvard Dataverse."

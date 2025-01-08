@@ -42,13 +42,13 @@ jobs:
         shell: bash -l {0}
         run: |
           pip3 install --break-system-packages -r requirements.txt
-      
+
       # pylint
       - name: Run pylint
         shell: bash -l {0}
         run: |
-          pylint --disable=R0801,W0221,W0122 aiagents4pharma
-  
+          pylint --disable=R0801,R0902,W0221,W0122 aiagents4pharma
+
   # code coverage job for ubuntu and macos
   code-cov-ubuntu-macos:
     name: code-coverage-ubuntu-macos
@@ -82,7 +82,7 @@ jobs:
         fi
       env:
         COVERAGE_FILE: './.coverage'
-  
+
   # code coverage job for windows
   code-cov-windows:
     name: code-coverage-windows
@@ -125,4 +125,3 @@ jobs:
         }
       env:
         COVERAGE_FILE: './.coverage'
-    

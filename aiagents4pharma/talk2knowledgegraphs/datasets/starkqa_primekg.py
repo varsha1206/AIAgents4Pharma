@@ -14,23 +14,35 @@ from .dataset import Dataset
 class StarkQAPrimeKG(Dataset):
     """
     Class for loading StarkQAPrimeKG dataset.
-    It downloads the data from the Harvard Dataverse and stores it in the local directory.
-    The data is then loaded into pandas DataFrame of nodes and edges.
+    It downloads the data from the HuggingFace repo and stores it in the local directory.
+    The data is then loaded into pandas DataFrame of QA pairs, dictionary of split indices,
+    and node information.
     """
 
     def __init__(self, local_dir: str = "../../../data/starkqa_primekg/"):
         """
         Constructor for StarkQAPrimeKG class.
+
+        Args:
+            local_dir (str): The local directory to store the dataset files.
         """
         self.name: str = "starkqa_primekg"
         self.hf_repo_id: str = "snap-stanford/stark"
         self.local_dir: str = local_dir
+        # Attributes to store the data
         self.starkqa: pd.DataFrame = None
         self.starkqa_split_idx: dict = None
         self.starkqa_node_info: dict = None
 
+        # Set up the dataset
+        self.setup()
+
+    def setup(self):
+        """
+        A method to set up the dataset.
+        """
         # Make the directory if it doesn't exist
-        os.makedirs(os.path.dirname(local_dir), exist_ok=True)
+        os.makedirs(os.path.dirname(self.local_dir), exist_ok=True)
 
     def _load_stark_repo(self) -> pd.DataFrame:
         """
@@ -66,31 +78,35 @@ class StarkQAPrimeKG(Dataset):
             )
 
         # Load StarkQA dataframe
-        self.starkqa = pd.read_csv(
+        starkqa = pd.read_csv(
             os.path.join(self.local_dir, "qa/prime/stark_qa/stark_qa.csv"),
             low_memory=False)
 
         # Read split indices
-        qa_indices = sorted(self.starkqa['id'].tolist())
-        self.starkqa_split_idx = {}
+        qa_indices = sorted(starkqa['id'].tolist())
+        starkqa_split_idx = {}
         for split in ['train', 'val', 'test', 'test-0.1']:
             indices_file = os.path.join(self.local_dir, "qa/prime/split", f'{split}.index')
             with open(indices_file, 'r', encoding='utf-8') as f:
                 indices = f.read().strip().split('\n')
             query_ids = [int(idx) for idx in indices]
-            self.starkqa_split_idx[split] = np.array(
+            starkqa_split_idx[split] = np.array(
                 [qa_indices.index(query_id) for query_id in query_ids]
             )
 
         # Load the node info of PrimeKG preprocessed for StarkQA
         with open(os.path.join(self.local_dir, 'skb/prime/processed/node_info.pkl'), 'rb') as f:
-            self.starkqa_node_info = pickle.load(f)
+            starkqa_node_info = pickle.load(f)
+
+        return starkqa, starkqa_split_idx, starkqa_node_info
 
     def load_data(self):
         """
-        Load the StarkQAPrimeKG dataset into pandas DataFrame of nodes and edges.
+        Load the StarkQAPrimeKG dataset into pandas DataFrame of QA pairs,
+        dictionary of split indices, and node information.
         """
-        self._load_stark_repo()
+        print("Loading StarkQAPrimeKG dataset...")
+        self.starkqa, self.starkqa_split_idx, self.starkqa_node_info = self._load_stark_repo()
 
 
     def get_starkqa(self) -> pd.DataFrame:

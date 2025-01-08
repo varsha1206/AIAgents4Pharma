@@ -5,51 +5,33 @@ Test cases for starkqa_primekg_loader.py
 import os
 import shutil
 import pytest
-from ..tools.starkqa_primekg_loader import (
-    StarkQAPrimeKGData,
-    StarkQAPrimeKGLoaderInput,
-    StarkQAPrimeKGLoaderTool
-)
+from ..datasets.starkqa_primekg import StarkQAPrimeKG
 
 # Remove the data folder for testing if it exists
 LOCAL_DIR = "../data/starkqa_primekg_test/"
 if os.path.exists(LOCAL_DIR):
     shutil.rmtree(LOCAL_DIR)
 
-@pytest.fixture(name="starkqa_primekg_data")
-def starkqa_primekg_data_fixture():
+@pytest.fixture(name="starkqa_primekg")
+def starkqa_primekg_fixture():
     """
     Fixture for creating an instance of StarkQAPrimeKGData.
     """
-    return StarkQAPrimeKGData(repo_id="snap-stanford/stark",
-                              local_dir=LOCAL_DIR)
+    return StarkQAPrimeKG(local_dir=LOCAL_DIR)
 
-@pytest.fixture(name="starkqa_primekg_loader_input")
-def starkqa_primekg_loader_input_fixture(starkqa_primekg_data):
+def test_download_starkqa_primekg(starkqa_primekg):
     """
-    Fixture for creating an instance of StarkQAPrimeKGLoaderInput.
-    """
-    return StarkQAPrimeKGLoaderInput(data=starkqa_primekg_data)
-
-@pytest.fixture(name="starkqa_primekg_loader_tool")
-def starkqa_primekg_loader_tool_fixture():
-    """
-    Fixture for creating an instance of StarkQAPrimeKGLoaderTool.
-    """
-    return StarkQAPrimeKGLoaderTool()
-
-def test_download_starkqa_primekg(starkqa_primekg_loader_input, starkqa_primekg_loader_tool):
-    """
-    Test the _run method of the StarkQAPrimeKGLoaderTool class by downloading files
+    Test the loading method of the StarkQAPrimeKGLoaderTool class by downloading files
     from HuggingFace Hub.
     """
-    starkqa_df, primekg_node_info, split_idx = starkqa_primekg_loader_tool.call_run(
-        repo_id=starkqa_primekg_loader_input.data.repo_id,
-        local_dir=starkqa_primekg_loader_input.data.local_dir
-    )
+    # Load StarkQA PrimeKG data
+    starkqa_primekg.load_data()
+    starkqa_df = starkqa_primekg.get_starkqa()
+    primekg_node_info = starkqa_primekg.get_starkqa_node_info()
+    split_idx = starkqa_primekg.get_starkqa_split_indicies()
 
     # Check if the local directory exists
-    assert os.path.exists(starkqa_primekg_loader_input.data.local_dir)
+    assert os.path.exists(starkqa_primekg.local_dir)
     # Check if downloaded files exist in the local directory
     files = ['qa/prime/split/test-0.1.index',
              'qa/prime/split/test.index',
@@ -59,7 +41,7 @@ def test_download_starkqa_primekg(starkqa_primekg_loader_input, starkqa_primekg_
              'qa/prime/stark_qa/stark_qa_human_generated_eval.csv',
              'skb/prime/processed.zip']
     for file in files:
-        path = f"{starkqa_primekg_loader_input.data.local_dir}/{file}"
+        path = f"{starkqa_primekg.local_dir}/{file}"
         assert os.path.exists(path)
     # Check dataframe
     assert starkqa_df is not None
@@ -75,19 +57,20 @@ def test_download_starkqa_primekg(starkqa_primekg_loader_input, starkqa_primekg_
     assert len(split_idx['test']) == 2801
     assert len(split_idx['test-0.1']) == 280
 
-def test_load_existing_starkqa_primekg(starkqa_primekg_loader_input, starkqa_primekg_loader_tool):
+def test_load_existing_starkqa_primekg(starkqa_primekg):
     """
 
-    Test the _run method of the StarkQAPrimeKGLoaderTool class by loading existing files
+    Test the loading method of the StarkQAPrimeKGLoaderTool class by loading existing files
     in the local directory.
     """
-    starkqa_df, primekg_node_info, split_idx = starkqa_primekg_loader_tool.call_run(
-        repo_id=starkqa_primekg_loader_input.data.repo_id,
-        local_dir=starkqa_primekg_loader_input.data.local_dir
-    )
+    # Load StarkQA PrimeKG data
+    starkqa_primekg.load_data()
+    starkqa_df = starkqa_primekg.get_starkqa()
+    primekg_node_info = starkqa_primekg.get_starkqa_node_info()
+    split_idx = starkqa_primekg.get_starkqa_split_indicies()
 
     # Check if the local directory exists
-    assert os.path.exists(starkqa_primekg_loader_input.data.local_dir)
+    assert os.path.exists(starkqa_primekg.local_dir)
     # Check if downloaded and processed files exist
     files = ['qa/prime/split/test-0.1.index',
              'qa/prime/split/test.index',
@@ -97,7 +80,7 @@ def test_load_existing_starkqa_primekg(starkqa_primekg_loader_input, starkqa_pri
              'qa/prime/stark_qa/stark_qa_human_generated_eval.csv',
              'skb/prime/processed.zip']
     for file in files:
-        path = f"{starkqa_primekg_loader_input.data.local_dir}/{file}"
+        path = f"{starkqa_primekg.local_dir}/{file}"
         assert os.path.exists(path)
     # Check dataframe
     assert starkqa_df is not None
@@ -112,12 +95,3 @@ def test_load_existing_starkqa_primekg(starkqa_primekg_loader_input, starkqa_pri
     assert len(split_idx['val']) == 2241
     assert len(split_idx['test']) == 2801
     assert len(split_idx['test-0.1']) == 280
-
-def test_get_metadata(starkqa_primekg_loader_tool):
-    """
-    Test the get_metadata method of the StarkQAPrimeKGLoaderTool class.
-    """
-    metadata = starkqa_primekg_loader_tool.get_metadata()
-    # Check metadata
-    assert metadata["name"] == "starkqa_primekg_loader"
-    assert metadata["description"] == "A tool to load StarkQA-PrimeKG from HuggingFace Hub."

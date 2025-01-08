@@ -10,6 +10,11 @@ class Dataset(ABC):
     """
     Abstract class for dataset.
     """
+    @abstractmethod
+    def setup(self):
+        """
+        A method to set up the dataset.
+        """
 
     @abstractmethod
     def load_data(self):
