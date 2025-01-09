@@ -61,6 +61,7 @@ class BioBridgePrimeKG(Dataset):
         self.df_node_train = None
         self.df_test = None
         self.df_node_test = None
+        self.node_info_dict = None
 
         # Set up the dataset
         self.setup()
@@ -212,10 +213,12 @@ class BioBridgePrimeKG(Dataset):
                                     local_filename=f"{self.preselected_node_types[i]}.csv")
 
             # Build the node index list
+            node_info_dict = {}
             node_index_list = []
             for i, file in enumerate(file_list):
                 df_node = pd.read_csv(os.path.join(self.local_dir, "processed",
                                                    f"{self.preselected_node_types[i]}.csv"))
+                node_info_dict[self.node_type_map[self.preselected_node_types[i]]] = df_node
                 node_index_list.extend(df_node["node_index"].tolist())
 
             # Filter the PrimeKG dataset to take into account only the selected node types
@@ -242,7 +245,7 @@ class BioBridgePrimeKG(Dataset):
             # Store the processed triplets
             primekg_triplets.to_csv(processed_file_path, sep="\t", compression="gzip", index=False)
 
-        return primekg_triplets
+        return primekg_triplets, node_info_dict
 
     def _build_train_test_split(self):
         """
@@ -449,7 +452,7 @@ class BioBridgePrimeKG(Dataset):
 
         # Build full triplets
         print("Building full triplets...")
-        self.primekg_triplets = self._build_full_triplets()
+        self.primekg_triplets, self.node_info_dict = self._build_full_triplets()
 
         # Build train-test split
         print("Building train-test split...")
@@ -531,3 +534,12 @@ class BioBridgePrimeKG(Dataset):
             "test": self.df_test,
             "node_test": self.df_node_test
         }
+
+    def get_node_info_dict(self) -> dict:
+        """
+        Get the node information dictionary for BioBridgePrimeKG dataset.
+
+        Returns:
+            dict: The node information dictionary for BioBridgePrimeKG dataset.
+        """
+        return self.node_info_dict

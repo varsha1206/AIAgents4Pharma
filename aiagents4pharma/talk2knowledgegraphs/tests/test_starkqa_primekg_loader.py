@@ -28,6 +28,8 @@ def test_download_starkqa_primekg(starkqa_primekg):
     starkqa_df = starkqa_primekg.get_starkqa()
     primekg_node_info = starkqa_primekg.get_starkqa_node_info()
     split_idx = starkqa_primekg.get_starkqa_split_indicies()
+    query_embeddings = starkqa_primekg.get_query_embeddings()
+    node_embeddings = starkqa_primekg.get_node_embeddings()
 
     # Check if the local directory exists
     assert os.path.exists(starkqa_primekg.local_dir)
@@ -55,6 +57,14 @@ def test_download_starkqa_primekg(starkqa_primekg):
     assert len(split_idx['val']) == 2241
     assert len(split_idx['test']) == 2801
     assert len(split_idx['test-0.1']) == 280
+    # Check query embeddings
+    assert query_embeddings is not None
+    assert len(query_embeddings) == 11204
+    assert query_embeddings[0].shape[1] == 1536
+    # Check node embeddings
+    assert node_embeddings is not None
+    assert len(node_embeddings) == 129375
+    assert node_embeddings[0].shape[1] == 1536
 
 def test_load_existing_starkqa_primekg(starkqa_primekg):
     """
@@ -67,6 +77,8 @@ def test_load_existing_starkqa_primekg(starkqa_primekg):
     starkqa_df = starkqa_primekg.get_starkqa()
     primekg_node_info = starkqa_primekg.get_starkqa_node_info()
     split_idx = starkqa_primekg.get_starkqa_split_indicies()
+    query_embeddings = starkqa_primekg.get_query_embeddings()
+    node_embeddings = starkqa_primekg.get_node_embeddings()
 
     # Check if the local directory exists
     assert os.path.exists(starkqa_primekg.local_dir)
@@ -94,3 +106,11 @@ def test_load_existing_starkqa_primekg(starkqa_primekg):
     assert len(split_idx['val']) == 2241
     assert len(split_idx['test']) == 2801
     assert len(split_idx['test-0.1']) == 280
+    # Check query embeddings
+    assert query_embeddings is not None
+    assert len(query_embeddings) == 11204
+    assert query_embeddings[0].shape[1] == 1536
+    # Check node embeddings
+    assert node_embeddings is not None
+    assert len(node_embeddings) == 129375
+    assert node_embeddings[0].shape[1] == 1536

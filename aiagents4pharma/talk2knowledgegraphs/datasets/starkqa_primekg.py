@@ -8,7 +8,9 @@ import pickle
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+import torch
 from huggingface_hub import hf_hub_download, list_repo_files
+import gdown
 from .dataset import Dataset
 
 class StarkQAPrimeKG(Dataset):
@@ -33,6 +35,8 @@ class StarkQAPrimeKG(Dataset):
         self.starkqa: pd.DataFrame = None
         self.starkqa_split_idx: dict = None
         self.starkqa_node_info: dict = None
+        self.query_emb_dict: dict = None
+        self.node_emb_dict: dict = None
 
         # Set up the dataset
         self.setup()
@@ -100,6 +104,42 @@ class StarkQAPrimeKG(Dataset):
 
         return starkqa, starkqa_split_idx, starkqa_node_info
 
+    def _load_stark_embeddings(self) -> tuple:
+        """
+        Private method to load the embeddings of StarkQAPrimeKG dataset.
+
+        Returns:
+            tuple: A tuple of query and node embeddings dictionaries.
+        """
+        # Load the provided embeddings of query and nodes
+        # Note that they utilized 'text-embedding-ada-002' for embeddings
+        emb_model = 'text-embedding-ada-002'
+        query_emb_url = 'https://drive.google.com/uc?id=1MshwJttPZsHEM2cKA5T13SIrsLeBEdyU'
+        node_emb_url = 'https://drive.google.com/uc?id=16EJvCMbgkVrQ0BuIBvLBp-BYPaye-Edy'
+
+        # Prepare respective directories to store the embeddings
+        emb_dir = os.path.join(self.local_dir, emb_model)
+        query_emb_dir = os.path.join(emb_dir, "query")
+        node_emb_dir = os.path.join(emb_dir, "doc")
+        os.makedirs(query_emb_dir, exist_ok=True)
+        os.makedirs(node_emb_dir, exist_ok=True)
+        query_emb_path = os.path.join(query_emb_dir, "query_emb_dict.pt")
+        node_emb_path = os.path.join(node_emb_dir, "candidate_emb_dict.pt")
+
+        # Download the embeddings if they do not exist in the local directory
+        if not os.path.exists(query_emb_path) or not os.path.exists(node_emb_path):
+            # Download the query embeddings
+            gdown.download(query_emb_url, query_emb_path, quiet=False)
+
+            # Download the node embeddings
+            gdown.download(node_emb_url, node_emb_path, quiet=False)
+
+        # Load the embeddings
+        query_emb_dict = torch.load(query_emb_path)
+        node_emb_dict = torch.load(node_emb_path)
+
+        return query_emb_dict, node_emb_dict
+
     def load_data(self):
         """
         Load the StarkQAPrimeKG dataset into pandas DataFrame of QA pairs,
@@ -107,6 +147,9 @@ class StarkQAPrimeKG(Dataset):
         """
         print("Loading StarkQAPrimeKG dataset...")
         self.starkqa, self.starkqa_split_idx, self.starkqa_node_info = self._load_stark_repo()
+
+        print("Loading StarkQAPrimeKG embeddings...")
+        self.query_emb_dict, self.node_emb_dict = self._load_stark_embeddings()
 
 
     def get_starkqa(self) -> pd.DataFrame:
@@ -135,3 +178,21 @@ class StarkQAPrimeKG(Dataset):
             dict: The node information of StarkQAPrimeKG dataset.
         """
         return self.starkqa_node_info
+
+    def get_query_embeddings(self) -> dict:
+        """
+        Get the query embeddings of StarkQAPrimeKG dataset.
+
+        Returns:
+            dict: The query embeddings of StarkQAPrimeKG dataset.
+        """
+        return self.query_emb_dict
+
+    def get_node_embeddings(self) -> dict:
+        """
+        Get the node embeddings of StarkQAPrimeKG dataset.
+
+        Returns:
+            dict: The node embeddings of StarkQAPrimeKG dataset.
+        """
+        return self.node_emb_dict
