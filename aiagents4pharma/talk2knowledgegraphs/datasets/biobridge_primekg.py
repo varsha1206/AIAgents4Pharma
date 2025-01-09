@@ -199,6 +199,14 @@ class BioBridgePrimeKG(Dataset):
             # Load the file from the local directory
             with open(processed_file_path, "rb") as f:
                 primekg_triplets = pd.read_csv(f, sep="\t", compression="gzip", low_memory=False)
+
+            # Load each dataframe in the local directory
+            node_info_dict = {}
+            for i, node_type in enumerate(self.preselected_node_types):
+                with open(os.path.join(self.local_dir, "processed",
+                                       f"{node_type}.csv"), "rb") as f:
+                    df_node = pd.read_csv(f)
+                node_info_dict[self.node_type_map[node_type]] = df_node
         else:
             # Download the related files from the BioBridge repo and further process them
             # List of processed files
