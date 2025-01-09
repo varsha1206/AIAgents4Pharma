@@ -8,7 +8,7 @@ Our toolkit currently consists of three agents, each designed to simplify and en
 
 - [**Talk2Cells**](talk2cells/intro.md) *(Coming soon)*: Query and analyze sequencing data with ease.
 
-- [**Talk2KnowledgeGraphs**](Talk2KnowledgeGraphs/intro.md) *(Coming soon)*: Access and explore complex biological knowledge graphs for insightful data connections.
+- [**Talk2KnowledgeGraphs**](talk2knowledgegraphs/intro.md) *(Coming soon)*: Access and explore complex biological knowledge graphs for insightful data connections.
 
 ### Prerequisites
 
@@ -57,9 +57,9 @@ Check out the tutorials on each agent for detailed instrcutions.
    export LANGCHAIN_TRACING_V2=true
    export LANGCHAIN_API_KEY=<your-api-key>
    ```
-   Please note that this will create a new tracing project in your Langsmith 
-   account with the name `<user_name>@<uuid>`, where `user_name` is the name 
-   you provided in the previous step. If you skip the previous step, it will 
+   Please note that this will create a new tracing project in your Langsmith
+   account with the name `<user_name>@<uuid>`, where `user_name` is the name
+   you provided in the previous step. If you skip the previous step, it will
    default to `default`.
 
 6. **Launch the app:**
