@@ -15,10 +15,7 @@ on:
 env:
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-# This workflow contains 3 jobs called:
-# 1. pylint-windows-ubuntu-macos
-# 2. code-cov-ubuntu-macos
-# 3. code-cov-windows
+# This workflow contains jobs covering linting and code coverage (along with testing).
 jobs:
   pylint-windows-ubuntu-macos:
     # The type of runner that the job will run on
@@ -41,13 +38,11 @@ jobs:
 
       # install requirements
       - name: Install the requirements
-        shell: bash -l {0}
         run: |
           pip3 install --break-system-packages -r requirements.txt
 
       # pylint
       - name: Run pylint
-        shell: bash -l {0}
         run: |
           pylint --disable=R0801,R0902,W0221,W0122 aiagents4pharma/talk2biomodels
 
