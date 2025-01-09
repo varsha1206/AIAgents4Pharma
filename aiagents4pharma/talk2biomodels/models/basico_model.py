@@ -36,14 +36,14 @@ class BasicoModel(SysBioModel):
             raise ValueError("Either model_id or sbml_file_path must be provided.")
         if self.model_id:
             attempts = 0
-            max_retries = 3
+            max_retries = 5
             while attempts < max_retries:
                 try:
                     self.copasi_model = basico.load_biomodel(self.model_id)
                     break
                 except URLError as e:
                     attempts += 1
-                    sleep(10)
+                    sleep(10*attempts)
                     if attempts >= max_retries:
                         raise e
             self.description = basico.biomodels.get_model_info(self.model_id)["description"]
