@@ -8,6 +8,7 @@ from ..tools.custom_plotter import CustomPlotterTool
 from ..models.basico_model import BasicoModel
 
 ST_SESSION_KEY = "test_key"
+QUESTION = "Strictly plot only T-helper cells related species. Do not plot any other species."
 
 @pytest.fixture(name="custom_plotter_tool")
 def custom_plotter_tool_fixture():
@@ -23,17 +24,17 @@ def test_tool(custom_plotter_tool):
     custom_plotter = custom_plotter_tool
     st.session_state[ST_SESSION_KEY] = None
     response = custom_plotter.invoke(input={
-                    'question': 'Plot only Th cells related species'
+                    'question': QUESTION
                     })
     assert response == "Please run the simulation first before plotting the figure."
     st.session_state[ST_SESSION_KEY] = BasicoModel(model_id=537)
     response = custom_plotter.invoke(input={
-                    'question': 'Plot only Th cells related species'
+                    'question': QUESTION
                     })
     assert response == "Please run the simulation first before plotting the figure."
     st.session_state[ST_SESSION_KEY].simulate()
     response = custom_plotter.invoke(input={
-                    'question': 'Plot only T helper cells related species'
+                    'question': "Plot only `IL100` species"
                     })
     assert response.startswith("No species found in the simulation")
     response = custom_plotter.invoke(input={
