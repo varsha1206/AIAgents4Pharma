@@ -39,5 +39,4 @@ version = {file = "release_version.txt"}
 [tool.setuptools]
 packages = ["aiagents4pharma",
             "aiagents4pharma.talk2knowledgegraphs",
-            "aiagents4pharma.talk2knowledgegraphs.datasets",
-            "aiagents4pharma.talk2knowledgegraphs.utils"]
+            "aiagents4pharma.talk2knowledgegraphs.datasets"]
