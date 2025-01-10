@@ -48,12 +48,14 @@ class StarkQAPrimeKG(Dataset):
         # Make the directory if it doesn't exist
         os.makedirs(os.path.dirname(self.local_dir), exist_ok=True)
 
-    def _load_stark_repo(self) -> pd.DataFrame:
+    def _load_stark_repo(self) -> tuple[pd.DataFrame, dict, dict]:
         """
         Private method to load related files of StarkQAPrimeKG dataset.
 
         Returns:
-            pd.DataFrame: The nodes dataframe of StarkQAPrimeKG dataset.
+            The nodes dataframe of StarkQAPrimeKG dataset.
+            The split indices of StarkQAPrimeKG dataset.
+            The node information of StarkQAPrimeKG dataset.
         """
         # Download the file if it does not exist in the local directory
         # Otherwise, load the data from the local directory
@@ -104,12 +106,13 @@ class StarkQAPrimeKG(Dataset):
 
         return starkqa, starkqa_split_idx, starkqa_node_info
 
-    def _load_stark_embeddings(self) -> tuple:
+    def _load_stark_embeddings(self) -> tuple[dict, dict]:
         """
         Private method to load the embeddings of StarkQAPrimeKG dataset.
 
         Returns:
-            tuple: A tuple of query and node embeddings dictionaries.
+            The query embeddings of StarkQAPrimeKG dataset.
+            The node embeddings of StarkQAPrimeKG dataset.
         """
         # Load the provided embeddings of query and nodes
         # Note that they utilized 'text-embedding-ada-002' for embeddings
@@ -157,7 +160,7 @@ class StarkQAPrimeKG(Dataset):
         Get the dataframe of StarkQAPrimeKG dataset, containing the QA pairs.
 
         Returns:
-            pd.DataFrame: The nodes dataframe of PrimeKG dataset.
+            The nodes dataframe of PrimeKG dataset.
         """
         return self.starkqa
 
@@ -166,7 +169,7 @@ class StarkQAPrimeKG(Dataset):
         Get the split indices of StarkQAPrimeKG dataset.
 
         Returns:
-            dict: The split indices of StarkQAPrimeKG dataset.
+            The split indices of StarkQAPrimeKG dataset.
         """
         return self.starkqa_split_idx
 
@@ -175,7 +178,7 @@ class StarkQAPrimeKG(Dataset):
         Get the node information of StarkQAPrimeKG dataset.
 
         Returns:
-            dict: The node information of StarkQAPrimeKG dataset.
+            The node information of StarkQAPrimeKG dataset.
         """
         return self.starkqa_node_info
 
@@ -184,7 +187,7 @@ class StarkQAPrimeKG(Dataset):
         Get the query embeddings of StarkQAPrimeKG dataset.
 
         Returns:
-            dict: The query embeddings of StarkQAPrimeKG dataset.
+            The query embeddings of StarkQAPrimeKG dataset.
         """
         return self.query_emb_dict
 
@@ -193,6 +196,6 @@ class StarkQAPrimeKG(Dataset):
         Get the node embeddings of StarkQAPrimeKG dataset.
 
         Returns:
-            dict: The node embeddings of StarkQAPrimeKG dataset.
+            The node embeddings of StarkQAPrimeKG dataset.
         """
         return self.node_emb_dict

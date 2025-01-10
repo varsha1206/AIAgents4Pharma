@@ -85,7 +85,7 @@ class BioBridgePrimeKG(Dataset):
         Private method to load related files of PrimeKG dataset.
 
         Returns:
-            PrimeKG: The PrimeKG dataset.
+            The PrimeKG dataset.
         """
         primekg_data = PrimeKG(local_dir=self.primekg_dir)
         primekg_data.load_data()
@@ -131,7 +131,7 @@ class BioBridgePrimeKG(Dataset):
         Load the data config file of BioBridgePrimeKG dataset.
 
         Returns:
-            dict: The data config file of BioBridgePrimeKG dataset.
+            The data config file of BioBridgePrimeKG dataset.
         """
         # Download the data config file of BioBridgePrimeKG
         self._download_file(
@@ -151,7 +151,7 @@ class BioBridgePrimeKG(Dataset):
         Build the node embeddings for BioBridgePrimeKG dataset.
 
         Returns:
-            dict: The dictionary of node embeddings.
+            The dictionary of node embeddings.
         """
         processed_file_path = os.path.join(self.local_dir, "embeddings", "embedding_dict.pkl")
         if os.path.exists(processed_file_path):
@@ -187,12 +187,13 @@ class BioBridgePrimeKG(Dataset):
 
         return emb_dict_all
 
-    def _build_full_triplets(self) -> pd.DataFrame:
+    def _build_full_triplets(self) -> tuple[pd.DataFrame, dict]:
         """
         Build the full triplets for BioBridgePrimeKG dataset.
 
         Returns:
-            pd.DataFrame: The full triplets for BioBridgePrimeKG dataset.
+            The full triplets for BioBridgePrimeKG dataset.
+            The dictionary of node information.
         """
         processed_file_path = os.path.join(self.local_dir, "processed", "triplet_full.tsv.gz")
         if os.path.exists(processed_file_path):
@@ -255,9 +256,17 @@ class BioBridgePrimeKG(Dataset):
 
         return primekg_triplets, node_info_dict
 
-    def _build_train_test_split(self):
+    def _build_train_test_split(self) -> tuple[pd.DataFrame, pd.DataFrame,
+                                               pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         Build the train-test split for BioBridgePrimeKG dataset.
+
+        Returns:
+            The train triplets for BioBridgePrimeKG dataset.
+            The train nodes for BioBridgePrimeKG dataset.
+            The test triplets for BioBridgePrimeKG dataset.
+            The test nodes for BioBridgePrimeKG dataset.
+            The full triplets for BioBridgePrimeKG dataset.
         """
         if os.path.exists(os.path.join(self.local_dir, "processed",
                                        "triplet_full_altered.tsv.gz")):
@@ -489,7 +498,7 @@ class BioBridgePrimeKG(Dataset):
         Get the PrimeKG dataset.
 
         Returns:
-            PrimeKG: The PrimeKG dataset.
+            The PrimeKG dataset.
         """
         return self.primekg
 
@@ -498,7 +507,7 @@ class BioBridgePrimeKG(Dataset):
         Get the data config file of BioBridgePrimeKG dataset.
 
         Returns:
-            dict: The data config file of BioBridgePrimeKG dataset.
+            The data config file of BioBridgePrimeKG dataset.
         """
         return self.data_config
 
@@ -507,7 +516,7 @@ class BioBridgePrimeKG(Dataset):
         Get the node embeddings for BioBridgePrimeKG dataset.
 
         Returns:
-            dict: The dictionary of node embeddings.
+            The dictionary of node embeddings.
         """
         return self.emb_dict
 
@@ -516,7 +525,7 @@ class BioBridgePrimeKG(Dataset):
         Get the full triplets for BioBridgePrimeKG dataset.
 
         Returns:
-            pd.DataFrame: The full triplets for BioBridgePrimeKG dataset.
+            The full triplets for BioBridgePrimeKG dataset.
         """
         return self.primekg_triplets
 
@@ -525,7 +534,7 @@ class BioBridgePrimeKG(Dataset):
     #     Get the negative triplets for BioBridgePrimeKG dataset.
 
     #     Returns:
-    #         pd.DataFrame: The negative triplets for BioBridgePrimeKG dataset.
+    #         The negative triplets for BioBridgePrimeKG dataset.
     #     """
     #     return self.primekg_triplets_negative
 
@@ -534,7 +543,7 @@ class BioBridgePrimeKG(Dataset):
         Get the train-test split for BioBridgePrimeKG dataset.
 
         Returns:
-            dict: The train-test split for BioBridgePrimeKG dataset.
+            The train-test split for BioBridgePrimeKG dataset.
         """
         return {
             "train": self.df_train,
@@ -548,6 +557,6 @@ class BioBridgePrimeKG(Dataset):
         Get the node information dictionary for BioBridgePrimeKG dataset.
 
         Returns:
-            dict: The node information dictionary for BioBridgePrimeKG dataset.
+            The node information dictionary for BioBridgePrimeKG dataset.
         """
         return self.node_info_dict
