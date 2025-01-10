@@ -54,8 +54,7 @@ packages = ["aiagents4pharma",
             "aiagents4pharma.talk2biomodels.models",
             "aiagents4pharma.talk2biomodels.tools",
             "aiagents4pharma.talk2knowledgegraphs",
-            "aiagents4pharma.talk2knowledgegraphs.datasets",
-            "aiagents4pharma.talk2knowledgegraphs.utils"]
+            "aiagents4pharma.talk2knowledgegraphs.datasets"]
 
 # [tool.setuptools.packages.find]
 # where = ["aiagents4pharma", "aiagents4pharma.talk2biomodels"]
