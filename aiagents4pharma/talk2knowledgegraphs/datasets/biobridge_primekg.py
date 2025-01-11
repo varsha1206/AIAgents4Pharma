@@ -336,8 +336,8 @@ class BioBridgePrimeKG(Dataset):
                 node_split["test"]["node_index"].extend(node_index["test"].tolist())
                 node_split["test"]["node_type"].extend([node_type]*len(node_index["test"]))
 
-                print(f"Number of {node_type} nodes in train: {len(node_index["train"])}")
-                print(f"Number of {node_type} nodes in test: {len(node_index["test"])}")
+                print(f"Number of {node_type} nodes in train: {len(node_index['train'])}")
+                print(f"Number of {node_type} nodes in test: {len(node_index['test'])}")
 
             # Prepare train and test DataFrames
             df_train = pd.concat(list_split["train"])
