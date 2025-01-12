@@ -1,5 +1,5 @@
 """
-Test cases for starkqa_primekg_loader.py
+Test cases for datasets/starkqa_primekg_loader.py
 """
 
 import os

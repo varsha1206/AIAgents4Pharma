@@ -26,11 +26,16 @@ nav:
         - PrimeKG: ./notebooks/talk2knowledgegraphs/tutorial_primekg_loader.ipynb
         - StarkQA-PrimeKG: ./notebooks/talk2knowledgegraphs/tutorial_starkqa_primekg_loader.ipynb
         - BioBridge-PrimeKG: ./notebooks/talk2knowledgegraphs/tutorial_biobridge_primekg_loader.ipynb
+        - Textual Embeddings: ./notebooks/talk2knowledgegraphs/tutorial_starkqa_primekg_textual_embeddings.ipynb
       - Datasets:
         - Dataset: talk2knowledgegraphs/datasets/dataset.md
         - PrimeKG: talk2knowledgegraphs/datasets/primekg.md
         - StarkQA-PrimeKG: talk2knowledgegraphs/datasets/starkqa_primekg.md
         - BioBridge-PrimeKG: talk2knowledgegraphs/datasets/biobridge_primekg.md
+      - Utils:
+        - Embeddings:
+          - Embeddings: talk2knowledgegraphs/utils/embeddings/embeddings.md
+          - EmbeddingWithSentenceTransformer: talk2knowledgegraphs/utils/embeddings/embedding_with_sentence_transformer.md
 
   - Documentation :
     - Ops:

@@ -36,7 +36,7 @@ class EmbeddingWithSentenceTransformer(Embeddings):
         self.trust_remote_code = trust_remote_code
 
         # Load the model
-        self.model = SentenceTransformer(self.model_name, 
+        self.model = SentenceTransformer(self.model_name,
                                          cache_folder=self.model_cache_dir,
                                          trust_remote_code=self.trust_remote_code)
         # Set the model to half precision if needed
