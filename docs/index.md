@@ -57,10 +57,10 @@ Check out the tutorials on each agent for detailed instrcutions.
    export LANGCHAIN_TRACING_V2=true
    export LANGCHAIN_API_KEY=<your-api-key>
    ```
-   Please note that this will create a new tracing project in your Langsmith
-   account with the name `<user_name>@<uuid>`, where `user_name` is the name
-   you provided in the previous step. If you skip the previous step, it will
-   default to `default`.
+   Please note that this will create a new tracing project in your Langsmith 
+   account with the name `<user_name>@<uuid>`, where `user_name` is the name 
+   you provided in the previous step. If you skip the previous step, it will 
+   default to `default` (a 128 bit unique ID created for the session).
 
 6. **Launch the app:**
    ```bash

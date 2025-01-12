@@ -20,7 +20,7 @@ nav:
   - Talk2Cells:
       - Talk2Cells: talk2cells/intro.md
 
-  - Talk2Knowledgegraphs :
+  - Talk2KnowledgeGraphs :
       - Introduction: talk2knowledgegraphs/intro.md
       - Tutorials:
         - PrimeKG: ./notebooks/talk2knowledgegraphs/tutorial_primekg_loader.ipynb

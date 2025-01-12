@@ -71,7 +71,7 @@ class PrimeKG(Dataset):
         It further processes the dataframe of nodes and returns it.
 
         Returns:
-            pd.DataFrame: The nodes dataframe of PrimeKG dataset.
+            The nodes dataframe of PrimeKG dataset.
         """
         local_file = os.path.join(self.local_dir, f"{self.name}_nodes.tsv.gz")
         if os.path.exists(local_file):
@@ -111,7 +111,7 @@ class PrimeKG(Dataset):
             nodes (pd.DataFrame): The nodes dataframe of PrimeKG dataset.
 
         Returns:
-            pd.DataFrame: The edges dataframe of PrimeKG dataset.
+            The edges dataframe of PrimeKG dataset.
         """
         local_file = os.path.join(self.local_dir, f"{self.name}_edges.tsv.gz")
         if os.path.exists(local_file):
@@ -187,7 +187,7 @@ class PrimeKG(Dataset):
         Get the nodes dataframe of PrimeKG dataset.
 
         Returns:
-            pd.DataFrame: The nodes dataframe of PrimeKG dataset.
+            The nodes dataframe of PrimeKG dataset.
         """
         return self.nodes
 
@@ -196,6 +196,6 @@ class PrimeKG(Dataset):
         Get the edges dataframe of PrimeKG dataset.
 
         Returns:
-            pd.DataFrame: The edges dataframe of PrimeKG dataset.
+            The edges dataframe of PrimeKG dataset.
         """
         return self.edges
