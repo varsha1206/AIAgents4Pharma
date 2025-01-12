@@ -15,6 +15,7 @@ classifiers = [
 dependencies = [
     "copasi_basico==0.78",
     "coverage==7.6.4",
+    "einops==0.8.0",
     "gdown==5.2.0",
     "huggingface_hub==0.26.5",
     "joblib==1.4.2",
@@ -31,8 +32,10 @@ dependencies = [
     "pylint==3.3.1",
     "pytest==8.3.3",
     "streamlit==1.39.0",
+    "sentence_transformers==3.3.1",
     "tabulate==0.9.0",
     "torch==2.5.1",
+    "torch_geometric==2.6.1",
     "tqdm==4.66.6",
     "mkdocs==1.6.1",
     "mkdocs-jupyter==0.25.1",
@@ -54,7 +57,9 @@ packages = ["aiagents4pharma",
             "aiagents4pharma.talk2biomodels.models",
             "aiagents4pharma.talk2biomodels.tools",
             "aiagents4pharma.talk2knowledgegraphs",
-            "aiagents4pharma.talk2knowledgegraphs.datasets"]
+            "aiagents4pharma.talk2knowledgegraphs.datasets",
+            "aiagents4pharma.talk2knowledgegraphs.utils",
+            "aiagents4pharma.talk2knowledgegraphs.utils.embeddings"]
 
 # [tool.setuptools.packages.find]
 # where = ["aiagents4pharma", "aiagents4pharma.talk2biomodels"]
