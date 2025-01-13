@@ -19,7 +19,6 @@ class EmbeddingWithSentenceTransformer(Embeddings):
         model_name: str,
         model_cache_dir: str = None,
         trust_remote_code: bool = True,
-        half_precision: bool = False,
     ):
         """
         Initialize the EmbeddingWithSentenceTransformer class.
@@ -39,9 +38,6 @@ class EmbeddingWithSentenceTransformer(Embeddings):
         self.model = SentenceTransformer(self.model_name,
                                          cache_folder=self.model_cache_dir,
                                          trust_remote_code=self.trust_remote_code)
-        # Set the model to half precision if needed
-        if half_precision:
-            self.model.half()
 
     def embed_documents(self, texts: List[str]) -> List[float]:
         """
