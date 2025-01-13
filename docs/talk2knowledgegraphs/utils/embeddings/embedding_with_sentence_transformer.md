@@ -1,1 +1,0 @@
-::: aiagents4pharma.talk2knowledgegraphs.utils.embeddings.embedding_with_sentence_transformer

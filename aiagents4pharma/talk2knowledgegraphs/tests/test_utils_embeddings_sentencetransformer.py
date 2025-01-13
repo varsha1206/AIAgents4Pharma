@@ -1,9 +1,10 @@
 """
-Test cases for utils/embeddings/embedding_with_sentence_transformer.py
+Test cases for utils/embeddings/sentence_transformer.py
 """
 
 import pytest
-from ..utils.embeddings.embedding_with_sentence_transformer import EmbeddingWithSentenceTransformer
+import numpy as np
+from ..utils.embeddings.sentence_transformer import EmbeddingWithSentenceTransformer
 
 @pytest.fixture(name="embedding_model")
 def embedding_model_fixture():
@@ -17,20 +18,26 @@ def test_embed_documents(embedding_model):
     """
     Test the embed_documents method of EmbeddingWithSentenceTransformer class.
     """
+    # Perform embedding
     texts = ["This is a test sentence.", "Another test sentence."]
     embeddings = embedding_model.embed_documents(texts)
+    # Check the result
     assert len(embeddings) == len(texts)
     assert len(embeddings[0]) > 0
     assert len(embeddings[0]) == 384
+    assert embeddings.dtype == np.float32
 
 def test_embed_query(embedding_model):
     """
     Test the embed_query method of EmbeddingWithSentenceTransformer class.
     """
+    # Perform embedding
     text = "This is a test query."
     embedding = embedding_model.embed_query(text)
+    # Check the result
     assert len(embedding) > 0
     assert len(embedding) == 384
+    assert embedding.dtype == np.float32
 
 @pytest.fixture(name="embedding_model_half")
 def embedding_model_half_fixture():
@@ -44,17 +51,23 @@ def test_half_prec_embed_documents(embedding_model_half):
     """
     Test the embed_documents method of EmbeddingWithSentenceTransformer class.
     """
+    # Perform embedding
     texts = ["This is a test sentence.", "Another test sentence."]
     embeddings = embedding_model_half.embed_documents(texts)
+    # Check the result
     assert len(embeddings) == len(texts)
     assert len(embeddings[0]) > 0
     assert len(embeddings[0]) == 384
+    assert embeddings.dtype == np.float16
 
 def test_half_prec_embed_query(embedding_model_half):
     """
     Test the embed_query method of EmbeddingWithSentenceTransformer class.
     """
+    # Perform embedding
     text = "This is a test query."
     embedding = embedding_model_half.embed_query(text)
+    # Check the result
     assert len(embedding) > 0
     assert len(embedding) == 384
+    assert embedding.dtype == np.float16

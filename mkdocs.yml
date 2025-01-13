@@ -27,6 +27,7 @@ nav:
         - StarkQA-PrimeKG: ./notebooks/talk2knowledgegraphs/tutorial_starkqa_primekg_loader.ipynb
         - BioBridge-PrimeKG: ./notebooks/talk2knowledgegraphs/tutorial_biobridge_primekg_loader.ipynb
         - Textual Embeddings: ./notebooks/talk2knowledgegraphs/tutorial_starkqa_primekg_textual_embeddings.ipynb
+        - Protein Embeddings: ./notebooks/talk2knowledgegraphs/tutorial_biobridge_primekg_protein_embeddings.ipynb
       - Datasets:
         - Dataset: talk2knowledgegraphs/datasets/dataset.md
         - PrimeKG: talk2knowledgegraphs/datasets/primekg.md
@@ -35,7 +36,8 @@ nav:
       - Utils:
         - Embeddings:
           - Embeddings: talk2knowledgegraphs/utils/embeddings/embeddings.md
-          - EmbeddingWithSentenceTransformer: talk2knowledgegraphs/utils/embeddings/embedding_with_sentence_transformer.md
+          - EmbeddingWithSentenceTransformer: talk2knowledgegraphs/utils/embeddings/sentence_transformer.md
+          - EmbeddingWithHuggingFace: talk2knowledgegraphs/utils/embeddings/huggingface.md
 
   - Documentation :
     - Ops:
