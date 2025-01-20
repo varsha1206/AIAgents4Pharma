@@ -6,8 +6,6 @@ using the basico package.
 """
 
 from typing import Optional, Dict, Union
-from time import sleep
-from urllib.error import URLError
 from pydantic import Field, model_validator
 import pandas as pd
 import basico
@@ -20,6 +18,7 @@ class BasicoModel(SysBioModel):
     """
     model_id: Optional[int] = Field(None, description="BioModels model ID to download and load")
     sbml_file_path: Optional[str] = Field(None, description="Path to an SBML file to load")
+    model_name: Optional[str] = Field(None, description="Name of the model")
     simulation_results: Optional[str] = None
     name: Optional[str] = Field("", description="Name of the model")
     description: Optional[str] = Field("", description="Description of the model")
@@ -35,20 +34,13 @@ class BasicoModel(SysBioModel):
         if not self.model_id and not self.sbml_file_path:
             raise ValueError("Either model_id or sbml_file_path must be provided.")
         if self.model_id:
-            attempts = 0
-            max_retries = 5
-            while attempts < max_retries:
-                try:
-                    self.copasi_model = basico.load_biomodel(self.model_id)
-                    break
-                except URLError as e:
-                    attempts += 1
-                    sleep(10*attempts)
-                    if attempts >= max_retries:
-                        raise e
+            self.copasi_model = basico.load_biomodel(self.model_id)
             self.description = basico.biomodels.get_model_info(self.model_id)["description"]
+            self.name = basico.model_info.get_model_name(model=self.copasi_model)
         elif self.sbml_file_path:
             self.copasi_model = basico.load_model(self.sbml_file_path)
+            self.description = basico.model_info.get_notes(model=self.copasi_model)
+            self.name = basico.model_info.get_model_name(model=self.copasi_model)
         return self
 
     def simulate(self,
