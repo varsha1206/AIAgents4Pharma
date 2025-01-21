@@ -13,7 +13,7 @@ def test_get_modelinfo_tool():
     app = get_app(unique_id)
     config = {"configurable": {"thread_id": unique_id}}
     # Update state
-    app.update_state(config, {"sbml_file_path": ["BIOMD0000000537.xml"]})
+    app.update_state(config,{"sbml_file_path": ["BIOMD0000000537.xml"]})
     prompt = "Extract all relevant information from the uploaded model."
     # Test the tool get_modelinfo
     response = app.invoke(
@@ -31,6 +31,8 @@ def test_search_models_tool():
     unique_id = 12345
     app = get_app(unique_id)
     config = {"configurable": {"thread_id": unique_id}}
+    # Update state
+    app.update_state(config, {"llm_model": "gpt-4o-mini"})
     prompt = "Search for models on Crohn's disease."
     # Test the tool get_modelinfo
     response = app.invoke(

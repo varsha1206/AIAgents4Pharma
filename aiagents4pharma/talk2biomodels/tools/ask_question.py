@@ -63,8 +63,7 @@ class AskQuestionTool(BaseTool):
         #     prompt_content = run_manager.metadata['prompt']
         # Create a pandas dataframe agent with OpenAI
         df_agent = create_pandas_dataframe_agent(
-                        ChatOpenAI(model=state['llm_model'],
-                                   temperature=0),
+                        ChatOpenAI(model=state['llm_model']),
                         allow_dangerous_code=True,
                         agent_type=AgentType.OPENAI_FUNCTIONS,
                         df=df,

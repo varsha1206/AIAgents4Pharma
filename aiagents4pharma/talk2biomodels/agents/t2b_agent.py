@@ -6,6 +6,7 @@ This is the agent file for the Talk2BioModels agent.
 
 import logging
 from typing import Annotated
+import hydra
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, StateGraph
@@ -49,19 +50,19 @@ def get_app(uniq_id, llm_model='gpt-4o-mini'):
 
     # Define the model
     llm = ChatOpenAI(model=llm_model, temperature=0)
+    # Load hydra configuration
+    logger.log(logging.INFO, "Load Hydra configuration for Talk2BioModels agent.")
+    with hydra.initialize(version_base=None, config_path="../../../configs"):
+        cfg = hydra.compose(config_name='config',
+                            overrides=['aiagents4pharma/talk2biomodels/agents/t2b_agent=default'])
+        cfg = cfg.aiagents4pharma.talk2biomodels.agents.t2b_agent
+    logger.log(logging.INFO, "state_modifier: %s", cfg.state_modifier)
     # Create the agent
     model = create_react_agent(
                 llm,
                 tools=tools,
                 state_schema=Talk2Biomodels,
-                state_modifier=(
-                    "You are Talk2BioModels agent."
-                    "If you are asked for analaysis on multiple models, "
-                    "call this agent multiple times."
-                    "If the user asks for the uploaded model, "
-                    "then pass the use_uploaded_model argument"
-                    " as True."
-                    ),
+                state_modifier=cfg.state_modifier,
                 checkpointer=MemorySaver()
             )
 

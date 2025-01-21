@@ -4,19 +4,21 @@
 Tool for searching models based on search query.
 """
 
-from typing import Type
+from typing import Type, Annotated
 from pydantic import BaseModel, Field
 from basico import biomodels
 from langchain_core.tools import BaseTool
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
+from langgraph.prebuilt import InjectedState
 
 class SearchModelsInput(BaseModel):
     """
     Input schema for the search models tool.
     """
     query: str = Field(description="Search models query", default=None)
+    state: Annotated[dict, InjectedState]
 
 # Note: It's important that every field has type hints. BaseTool is a
 # Pydantic class and not having type hints can lead to unexpected behavior.
@@ -29,7 +31,9 @@ class SearchModelsTool(BaseTool):
     args_schema: Type[BaseModel] = SearchModelsInput
     return_direct: bool = True
 
-    def _run(self, query: str) -> dict:
+    def _run(self,
+             query: str,
+             state: Annotated[dict, InjectedState]) -> dict:
         """
         Run the tool.
 
@@ -40,7 +44,7 @@ class SearchModelsTool(BaseTool):
             dict: The answer to the question in the form of a dictionary.
         """
         search_results = biomodels.search_for_model(query)
-        llm = ChatOpenAI(model="gpt-4o-mini")
+        llm = ChatOpenAI(model=state['llm_model'])
         # Check if run_manager's metadata has the key 'prompt_content'
         prompt_content = f'''
                         Convert the input into a table.
