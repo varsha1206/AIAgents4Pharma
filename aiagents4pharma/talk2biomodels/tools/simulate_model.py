@@ -124,33 +124,37 @@ class SimulateModelTool(BaseTool):
                    "Calling simulate_model tool %s, %s",
                    sys_bio_model,
                    arg_data)
-        # model_object = load_biomodel(sys_bio_model)
-        # print (state, 'state')
-        sbml_file_path = [state['sbml_file_path']][-1] if 'sbml_file_path' in state else None
-        # print (sbml_file_path, 'sbml_file_path')
+        sbml_file_path = state['sbml_file_path'][-1] if len(state['sbml_file_path']) > 0 else None
         model_object = load_biomodel(sys_bio_model,
                                   sbml_file_path=sbml_file_path)
         # Prepare the dictionary of species data
         # that will be passed to the simulate method
         # of the BasicoModel class
+        duration = 100.0
+        interval = 10
         dic_species_data = None
-        if arg_data.species_data is not None:
-            dic_species_data = dict(zip(arg_data.species_data.species_name,
-                                        arg_data.species_data.species_concentration))
-        # Add recurring events (if any) to the model
-        if arg_data.recurring_data is not None:
-            add_rec_events(model_object, arg_data.recurring_data)
+        if arg_data:
+            if arg_data.species_data is not None:
+                print (dic_species_data, 'dic_species_data inside')
+                dic_species_data = dict(zip(arg_data.species_data.species_name,
+                                            arg_data.species_data.species_concentration))
+            # Add recurring events (if any) to the model
+            if arg_data.recurring_data is not None:
+                add_rec_events(model_object, arg_data.recurring_data)
+            duration=arg_data.time_data.duration if arg_data.time_data is not None else 100.0
+            interval=arg_data.time_data.interval if arg_data.time_data is not None else 10
 
+        # print (dic_species_data, 'dic_species_data')
         # Simulate the model
         df = model_object.simulate(
             parameters=dic_species_data,
-            duration=arg_data.time_data.duration if arg_data.time_data is not None else 100.0,
-            interval=arg_data.time_data.interval if arg_data.time_data is not None else 10
+            duration=duration,
+            interval=interval
             )
 
         dic_updated_state_for_model = {}
         for key, value in {
-                        "model_id": sys_bio_model.model_id,
+                        "model_id": [sys_bio_model.biomodel_id],
                         "sbml_file_path": [sbml_file_path],
                         }.items():
             if value:

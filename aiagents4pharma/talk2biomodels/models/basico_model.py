@@ -14,11 +14,10 @@ from .sys_bio_model import SysBioModel
 class BasicoModel(SysBioModel):
     """
     Model that loads and simulates SBML models using the basico package.
-    Can load models from an SBML file or download them using a BioModels model_id.
+    Can load models from an SBML file or download them using a BioModels biomodel_id.
     """
-    model_id: Optional[int] = Field(None, description="BioModels model ID to download and load")
+    biomodel_id: Optional[int] = Field(None, description="BioModels model ID to download and load")
     sbml_file_path: Optional[str] = Field(None, description="Path to an SBML file to load")
-    model_name: Optional[str] = Field(None, description="Name of the model")
     simulation_results: Optional[str] = None
     name: Optional[str] = Field("", description="Name of the model")
     description: Optional[str] = Field("", description="Description of the model")
@@ -27,15 +26,15 @@ class BasicoModel(SysBioModel):
     copasi_model: Optional[object] = None  # Holds the loaded Copasi model
 
     @model_validator(mode="after")
-    def check_model_id_or_sbml_file_path(self):
+    def check_biomodel_id_or_sbml_file_path(self):
         """
-        Validate that either model_id or sbml_file_path is provided.
+        Validate that either biomodel_id or sbml_file_path is provided.
         """
-        if not self.model_id and not self.sbml_file_path:
-            raise ValueError("Either model_id or sbml_file_path must be provided.")
-        if self.model_id:
-            self.copasi_model = basico.load_biomodel(self.model_id)
-            self.description = basico.biomodels.get_model_info(self.model_id)["description"]
+        if not self.biomodel_id and not self.sbml_file_path:
+            raise ValueError("Either biomodel_id or sbml_file_path must be provided.")
+        if self.biomodel_id:
+            self.copasi_model = basico.load_biomodel(self.biomodel_id)
+            self.description = basico.biomodels.get_model_info(self.biomodel_id)["description"]
             self.name = basico.model_info.get_model_name(model=self.copasi_model)
         elif self.sbml_file_path:
             self.copasi_model = basico.load_model(self.sbml_file_path)

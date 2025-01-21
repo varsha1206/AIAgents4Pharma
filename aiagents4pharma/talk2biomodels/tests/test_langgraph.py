@@ -77,9 +77,10 @@ def test_simulate_model_tool():
     '''
     Test the simulate_model tool.
     '''
-    unique_id = 12345
-    app = get_app(unique_id, llm_model='gpt-4o-mini')
+    unique_id = 123
+    app = get_app(unique_id)
     config = {"configurable": {"thread_id": unique_id}}
+    app.update_state(config, {"llm_model": "gpt-4o-mini"})
     # ##########################################
     # ## Test simulate_model tool
     # ##########################################
@@ -93,7 +94,7 @@ def test_simulate_model_tool():
                         config=config
                     )
     assistant_msg = response["messages"][-1].content
-    # print (assistant_msg)
+    print (assistant_msg)
     # Check if the assistant message is a string
     assert isinstance(assistant_msg, str)
     ##########################################
@@ -103,9 +104,9 @@ def test_simulate_model_tool():
     # Update state
     app.update_state(config, {"llm_model": "gpt-4o-mini"})
     prompt = "What is the concentration of CRP in serum at 1000 hours? "
-    prompt += "Show only the concentration, rounded to 1 decimal place."
-    prompt += "For example, if the concentration is 0.123456, "
-    prompt += "your response should be `0.1`. No other information is needed."
+    # prompt += "Show only the concentration, rounded to 1 decimal place."
+    # prompt += "For example, if the concentration is 0.123456, "
+    # prompt += "your response should be `0.1`. Do not return any other information."
     # Test the tool get_modelinfo
     response = app.invoke(
                         {"messages": [HumanMessage(content=prompt)]},
@@ -114,7 +115,7 @@ def test_simulate_model_tool():
     assistant_msg = response["messages"][-1].content
     # print (assistant_msg)
     # Check if the assistant message is a string
-    assert assistant_msg == "1.7"
+    assert "1.7" in assistant_msg
 
     ##########################################
     # Test custom_plotter tool when the

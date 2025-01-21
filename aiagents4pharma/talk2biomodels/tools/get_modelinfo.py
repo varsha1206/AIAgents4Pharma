@@ -74,9 +74,7 @@ class GetModelInfoTool(BaseTool):
                      sys_bio_model,
                    requested_model_info)
         # print (state, 'state')
-        sbml_file_path = state['sbml_file_path'][-1] if 'sbml_file_path' in state else None
-        # print (sbml_file_path, 'sbml_file_path')
-        print (sys_bio_model, 'sys_bio_model')
+        sbml_file_path = state['sbml_file_path'][-1] if len(state['sbml_file_path']) > 0 else None
         model_obj = load_biomodel(sys_bio_model,
                                   sbml_file_path=sbml_file_path)
         dic_results = {}
@@ -113,7 +111,7 @@ class GetModelInfoTool(BaseTool):
         # Prepare the dictionary of updated state for the model
         dic_updated_state_for_model = {}
         for key, value in {
-                        "model_id": sys_bio_model.model_id,
+                        "model_id": [sys_bio_model.biomodel_id],
                         "sbml_file_path": [sbml_file_path],
                         }.items():
             if value:
