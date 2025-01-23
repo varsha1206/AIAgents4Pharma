@@ -6,10 +6,13 @@ Tool for plotting a custom figure.
 
 import logging
 from typing import Type, List, TypedDict, Annotated, Tuple, Union, Literal
+from typing import Type, List, TypedDict, Annotated, Tuple, Union, Literal
 from pydantic import BaseModel, Field
+import pandas as pd
 import pandas as pd
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import BaseTool
+from langgraph.prebuilt import InjectedState
 from langgraph.prebuilt import InjectedState
 
 # Initialize logger
@@ -22,7 +25,11 @@ class CustomPlotterInput(BaseModel):
     """
     question: str = Field(description="Description of the plot")
     state: Annotated[dict, InjectedState]
+    state: Annotated[dict, InjectedState]
 
+# Note: It's important that every field has type hints.
+# BaseTool is a Pydantic class and not having type hints
+# can lead to unexpected behavior.
 # Note: It's important that every field has type hints.
 # BaseTool is a Pydantic class and not having type hints
 # can lead to unexpected behavior.
@@ -34,6 +41,7 @@ class CustomPlotterTool(BaseTool):
     description: str = "A tool to make custom plots of the simulation results"
     args_schema: Type[BaseModel] = CustomPlotterInput
     response_format: str = "content_and_artifact"
+    response_format: str = "content_and_artifact"
 
     def _run(self,
              question: str,
@@ -43,6 +51,8 @@ class CustomPlotterTool(BaseTool):
         Run the tool.
 
         Args:
+            question (str): The question about the custom plot.
+            state (dict): The state of the graph.
             question (str): The question about the custom plot.
             state (dict): The state of the graph.
 
