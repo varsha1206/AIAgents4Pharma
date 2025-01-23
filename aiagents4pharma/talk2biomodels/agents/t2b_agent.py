@@ -72,7 +72,7 @@ def get_app(uniq_id, llm_model='gpt-4o-mini'):
     # Define the two nodes we will cycle between
     workflow.add_node("agent_t2b", agent_t2b_node)
 
-    # Set the entrypoint as `agent`
+    # Set the entrypoint as the first node
     # This means that this node is the first one called
     workflow.add_edge(START, "agent_t2b")
 
