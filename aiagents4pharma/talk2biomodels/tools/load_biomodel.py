@@ -26,4 +26,3 @@ def load_biomodel(sys_bio_model, sbml_file_path=None):
     elif sbml_file_path:
         model_object = BasicoModel(sbml_file_path=sbml_file_path)
     return model_object
-    # return None
