@@ -134,17 +134,18 @@ class SimulateModelTool(BaseTool):
         interval = 10
         dic_species_data = None
         if arg_data:
+            # Prepare the dictionary of species data
             if arg_data.species_data is not None:
-                print (dic_species_data, 'dic_species_data inside')
                 dic_species_data = dict(zip(arg_data.species_data.species_name,
                                             arg_data.species_data.species_concentration))
             # Add recurring events (if any) to the model
             if arg_data.recurring_data is not None:
                 add_rec_events(model_object, arg_data.recurring_data)
-            duration=arg_data.time_data.duration if arg_data.time_data is not None else 100.0
-            interval=arg_data.time_data.interval if arg_data.time_data is not None else 10
+            # Set the duration and interval
+            if arg_data.time_data is not None:
+                duration = arg_data.time_data.duration
+                interval = arg_data.time_data.interval
 
-        # print (dic_species_data, 'dic_species_data')
         # Simulate the model
         df = model_object.simulate(
             parameters=dic_species_data,
@@ -152,6 +153,7 @@ class SimulateModelTool(BaseTool):
             interval=interval
             )
 
+        # Prepare the dictionary of updated state for the model
         dic_updated_state_for_model = {}
         for key, value in {
                         "model_id": [sys_bio_model.biomodel_id],
@@ -159,11 +161,12 @@ class SimulateModelTool(BaseTool):
                         }.items():
             if value:
                 dic_updated_state_for_model[key] = value
-        # return content
+
+        # Return the updated state of the tool
         return Command(
                 update=dic_updated_state_for_model|{
                 # update the state keys
-                "df_simulated_data": df.to_dict(),
+                "dic_simulated_data": df.to_dict(),
                 # update the message history
                 "messages": [
                     ToolMessage(

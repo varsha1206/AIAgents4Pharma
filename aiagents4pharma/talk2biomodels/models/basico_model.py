@@ -5,11 +5,16 @@ BasicoModel class for loading and simulating SBML models
 using the basico package.
 """
 
+import logging
 from typing import Optional, Dict, Union
 from pydantic import Field, model_validator
 import pandas as pd
 import basico
 from .sys_bio_model import SysBioModel
+
+# Initialize logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class BasicoModel(SysBioModel):
     """
@@ -31,6 +36,7 @@ class BasicoModel(SysBioModel):
         Validate that either biomodel_id or sbml_file_path is provided.
         """
         if not self.biomodel_id and not self.sbml_file_path:
+            logger.error("Either biomodel_id or sbml_file_path must be provided.")
             raise ValueError("Either biomodel_id or sbml_file_path must be provided.")
         if self.biomodel_id:
             self.copasi_model = basico.load_biomodel(self.biomodel_id)
@@ -83,10 +89,16 @@ class BasicoModel(SysBioModel):
         df_result = basico.run_time_course(model=self.copasi_model,
                                         intervals=interval,
                                         duration=duration)
+        # Replace curly braces in column headers with square brackets
+        # Because curly braces in the world of LLMS are used for
+        # structured output
         df_result.columns = df_result.columns.str.replace('{', '[', regex=False).\
                     str.replace('}', ']', regex=False)
+        # Reset the index
         df_result.reset_index(inplace=True)
+        # Store the simulation results
         self.simulation_results = df_result
+        # Return copy of the simulation results
         return df_result.copy()
 
     def get_model_metadata(self) -> Dict[str, Union[str, int]]:

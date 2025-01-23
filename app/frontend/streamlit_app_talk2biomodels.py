@@ -79,26 +79,89 @@ def _submit_feedback(user_response):
     )
     st.info("Your feedback is on its way to the developers. Thank you!", icon="🚀")
 
-def render_plotly(df_simulation_results: pd.DataFrame) -> px.line:
+def render_toggle(key: str,
+                  toggle_text: str,
+                  toggle_state: bool,
+                  save_toggle: bool = False):
+    """
+    Function to render the toggle button to show/hide the table.
+    """
+    st.toggle(
+        toggle_text,
+        toggle_state,
+        help='''Toggle to show/hide the table''',
+        key=key
+        )
+    # print (key)
+    if save_toggle:
+        # Add data to the chat history
+        st.session_state.messages.append({
+                "type": "toggle",
+                "content": toggle_text,
+                "toggle_state": toggle_state,
+                "key": key
+            })
+
+def render_plotly(df: pd.DataFrame,
+                key: str,
+                tool_name: str,
+                save_chart: bool = False
+                ):
     """
     Function to visualize the dataframe using Plotly.
 
     Args:
         df: pd.DataFrame: The input dataframe
     """
-    df_simulation_results = df_simulation_results.melt(
-                                id_vars='Time',
-                                var_name='Species',
-                                value_name='Concentration')
-    fig = px.line(df_simulation_results,
-                    x='Time',
-                    y='Concentration',
-                    color='Species',
-                    title="Concentration of species over time",
-                    height=500,
-                    width=600
-            )
-    return fig
+    toggle_state = st.session_state[f'toggle_plotly_{tool_name}_{key.split("_")[-1]}']
+    if toggle_state:
+        df_simulation_results = df.melt(
+                                    id_vars='Time',
+                                    var_name='Species',
+                                    value_name='Concentration')
+        fig = px.line(df_simulation_results,
+                        x='Time',
+                        y='Concentration',
+                        color='Species',
+                        title="Concentration of species over time",
+                        height=500,
+                        width=600
+                )
+        # Display the plotly chart
+        st.plotly_chart(fig,
+                        use_container_width=True,
+                        key=key)
+    if save_chart:
+        # Add data to the chat history
+        st.session_state.messages.append({
+                "type": "plotly",
+                "content": df,
+                "key": key,
+                "tool_name": tool_name
+            })
+
+def render_table(df: pd.DataFrame,
+                 tool_name: str,
+                 key: str,
+                 save_table: bool = False
+                ):
+    """
+    Function to render the table in the chat.
+    """
+    # print (st.session_state['toggle_simulate_model_'+key.split("_")[-1]])
+    toggle_state = st.session_state[f'toggle_table_{tool_name}_{key.split("_")[-1]}']
+    if toggle_state:
+        st.dataframe(df,
+                    use_container_width=True,
+                    key=key)
+    if save_table:
+        # Add data to the chat history
+        st.session_state.messages.append({
+                "type": "dataframe",
+                "content": df,
+                "key": key,
+                "tool_name": tool_name
+            })
 
 @st.dialog("Warning ⚠️")
 def update_llm_model():
@@ -136,7 +199,6 @@ with main_col1:
 
         # LLM panel (Only at the front-end for now)
         llms = ["gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"]
-
         st.selectbox(
             "Pick an LLM to power the agent",
             llms,
@@ -144,14 +206,6 @@ with main_col1:
             key="llm_model",
             on_change=update_llm_model
         )
-
-        # Supress the simulation table
-        suppress_table_button = st.toggle(
-            "Suppress simulation table",
-            False,
-            help='''Toggle to suppress the display 
-            of the simulation table'''
-            )
 
         # Upload files (placeholder)
         uploaded_file = st.file_uploader(
@@ -176,20 +230,28 @@ with main_col2:
         for count, message in enumerate(st.session_state.messages):
             if message["type"] == "message":
                 with st.chat_message(message["content"].role,
-                                     avatar="🤖" 
+                                     avatar="🤖"
                                      if message["content"].role != 'user'
                                      else "👩🏻‍💻"):
                     st.markdown(message["content"].content)
                     st.empty()
             elif message["type"] == "plotly":
-                st.plotly_chart(render_plotly(message["content"]),
-                                use_container_width = True,
-                                key=f"plotly_{count}")
+                render_plotly(message["content"],
+                              key=message["key"],
+                              tool_name=message["tool_name"],
+                              save_chart=False)
+                st.empty()
+            elif message["type"] == "toggle":
+                render_toggle(key=message["key"],
+                                    toggle_text=message["content"],
+                                    toggle_state=message["toggle_state"],
+                                    save_toggle=False)
                 st.empty()
             elif message["type"] == "dataframe":
-                st.dataframe(message["content"],
-                            use_container_width = True,
-                            key=f"dataframe_{count}")
+                render_table(message["content"],
+                                key=message["key"],
+                                tool_name=message["tool_name"],
+                                save_table=False)
                 st.empty()
 
         # When the user asks a question
@@ -292,53 +354,46 @@ with main_col2:
                         # These may contain additional visuals that
                         # need to be displayed to the user.
                         print("ToolMessage", msg)
-                        if msg.name == "simulate_model":
-                            df = pd.DataFrame.from_dict(current_state.values["df_simulated_data"])
-                            if not suppress_table_button:
-                                # Add data to the chat history
-                                st.session_state.messages.append({
-                                        "type": "dataframe",
-                                        "content": df
-                                    })
-                                # Display the dataframe
-
-                                st.dataframe(df, use_container_width=True)
-                            # Add the plotly chart to the chat history
-                            st.session_state.messages.append({
-                                    "type": "plotly",
-                                    "content": df
-                                })
+                        if msg.name in ["simulate_model", "custom_plotter"]:
+                            df_simulated = pd.DataFrame.from_dict(
+                                                current_state.values["dic_simulated_data"])
+                            if msg.name == "simulate_model":
+                                df_selected = df_simulated
+                            else:
+                                # Add Time column to the custom headers
+                                custom_headers = msg.artifact
+                                if custom_headers:
+                                    if 'Time' not in msg.artifact:
+                                        custom_headers = ['Time'] + custom_headers
+                                    # Make df with only the custom headers
+                                    df_selected = df_simulated[custom_headers]
+                                else:
+                                    continue
+                            # Display the toggle button to suppress the table
+                            render_toggle(
+                                key="toggle_plotly_"+msg.name+'_'+str(st.session_state.run_id),
+                                toggle_text="Show Plot",
+                                toggle_state=True,
+                                save_toggle=True)
                             # Display the plotly chart
-                            st.plotly_chart(render_plotly(df),
-                                            use_container_width=False)
+                            render_plotly(
+                                df_selected,
+                                key="plotly_"+msg.name+'_'+str(st.session_state.run_id),
+                                tool_name=msg.name,
+                                save_chart=True)
+                            # Display the toggle button to suppress the table
+                            render_toggle(
+                                key="toggle_table_"+msg.name+'_'+str(st.session_state.run_id),
+                                toggle_text="Show Table",
+                                toggle_state=False,
+                                save_toggle=True)
+                            # Display the table
+                            render_table(
+                                df_selected,
+                                key="dataframe_"+msg.name+'_'+str(st.session_state.run_id),
+                                tool_name=msg.name,
+                                save_table=True)
                             st.empty()
-                        elif msg.name == "custom_plotter":
-                            if 'df_simulated_data' not in current_state.values:
-                                continue
-                            df = pd.DataFrame.from_dict(current_state.values["df_simulated_data"])
-                            # Add Time column to the custom headers
-                            custom_headers = msg.artifact
-                            if custom_headers:
-                                if 'Time' not in msg.artifact:
-                                    custom_headers = ['Time'] + custom_headers
-                                # Make df_subset with only the custom headers
-                                df_subset = df[custom_headers]
-                                if not suppress_table_button:
-                                    # Add data to the chat history
-                                    st.session_state.messages.append({
-                                                    "type": "dataframe",
-                                                    "content": df_subset
-                                                })
-                                    st.dataframe(df_subset, use_container_width=True)
-                                # Add the plotly chart to the chat history
-                                st.session_state.messages.append({
-                                                "type": "plotly",
-                                                "content": df_subset
-                                            })
-                                # Display the plotly chart
-                                st.plotly_chart(render_plotly(df_subset),
-                                                    use_container_width = True)
-                                st.empty()
         # Collect feedback and display the thumbs feedback
         if st.session_state.get("run_id"):
             feedback = streamlit_feedback(

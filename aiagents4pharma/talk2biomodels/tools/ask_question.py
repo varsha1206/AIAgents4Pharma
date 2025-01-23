@@ -54,10 +54,10 @@ class AskQuestionTool(BaseTool):
         logger.log(logging.INFO,
                    "Calling ask_question tool %s", question)
         # Check if the simulation results are available
-        if 'df_simulated_data' not in state:
+        if 'dic_simulated_data' not in state:
             return "Please run the simulation first before \
                 asking a question about the simulation results."
-        df = pd.DataFrame.from_dict(state['df_simulated_data'])
+        df = pd.DataFrame.from_dict(state['dic_simulated_data'])
         prompt_content = None
         # if run_manager and 'prompt' in run_manager.metadata:
         #     prompt_content = run_manager.metadata['prompt']

@@ -51,9 +51,9 @@ class CustomPlotterTool(BaseTool):
         """
         logger.log(logging.INFO, "Calling custom_plotter tool %s", question)
         # Check if the simulation results are available
-        # if 'df_simulated_data' not in state:
+        # if 'dic_simulated_data' not in state:
         #     return "Please run the simulation first before plotting the figure.", None
-        df = pd.DataFrame.from_dict(state['df_simulated_data'])
+        df = pd.DataFrame.from_dict(state['dic_simulated_data'])
         species_names = df.columns.tolist()
         # Exclude the time column
         species_names.remove('Time')
