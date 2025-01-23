@@ -99,7 +99,7 @@ class SimulateModelTool(BaseTool):
     Tool for simulating a model.
     """
     name: str = "simulate_model"
-    description: str = "A tool to simulate a model."
+    description: str = "A tool to simulate a biomodel"
     args_schema: Type[BaseModel] = SimulateModelInput
 
     def _run(self,

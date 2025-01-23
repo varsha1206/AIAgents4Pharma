@@ -27,7 +27,7 @@ class SearchModelsTool(BaseTool):
     Tool for returning the search results based on the search query.
     """
     name: str = "search_models"
-    description: str = "Search models based on search query."
+    description: str = "Search models in the BioMmodels database based on keywords."
     args_schema: Type[BaseModel] = SearchModelsInput
     return_direct: bool = True
 

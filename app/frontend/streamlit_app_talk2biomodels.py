@@ -9,18 +9,24 @@ import sys
 import random
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 from streamlit_feedback import streamlit_feedback
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_core.messages import ChatMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.tracers.context import collect_runs
 from langchain.callbacks.tracers import LangChainTracer
-from langsmith import Client
+from utils import streamlit_utils
 sys.path.append('./')
 from aiagents4pharma.talk2biomodels.agents.t2b_agent import get_app
 
 st.set_page_config(page_title="Talk2Biomodels", page_icon="🤖", layout="wide")
+
+
+st.logo(
+    image='docs/VPE.png',
+    size='large',
+    link='https://github.com/VirtualPatientEngine'
+)
 
 # Check if env variable OPENAI_API_KEY exists
 if "OPENAI_API_KEY" not in os.environ:
@@ -66,124 +72,6 @@ if "app" not in st.session_state:
 # Get the app
 app = st.session_state.app
 
-def _submit_feedback(user_response):
-    '''
-    Function to submit feedback to the developers.
-    '''
-    client = Client()
-    client.create_feedback(
-        st.session_state.run_id,
-        key="feedback",
-        score=1 if user_response['score'] == "👍" else 0,
-        comment=user_response['text']
-    )
-    st.info("Your feedback is on its way to the developers. Thank you!", icon="🚀")
-
-def render_toggle(key: str,
-                  toggle_text: str,
-                  toggle_state: bool,
-                  save_toggle: bool = False):
-    """
-    Function to render the toggle button to show/hide the table.
-    """
-    st.toggle(
-        toggle_text,
-        toggle_state,
-        help='''Toggle to show/hide the table''',
-        key=key
-        )
-    # print (key)
-    if save_toggle:
-        # Add data to the chat history
-        st.session_state.messages.append({
-                "type": "toggle",
-                "content": toggle_text,
-                "toggle_state": toggle_state,
-                "key": key
-            })
-
-def render_plotly(df: pd.DataFrame,
-                key: str,
-                tool_name: str,
-                save_chart: bool = False
-                ):
-    """
-    Function to visualize the dataframe using Plotly.
-
-    Args:
-        df: pd.DataFrame: The input dataframe
-    """
-    toggle_state = st.session_state[f'toggle_plotly_{tool_name}_{key.split("_")[-1]}']
-    if toggle_state:
-        df_simulation_results = df.melt(
-                                    id_vars='Time',
-                                    var_name='Species',
-                                    value_name='Concentration')
-        fig = px.line(df_simulation_results,
-                        x='Time',
-                        y='Concentration',
-                        color='Species',
-                        title="Concentration of species over time",
-                        height=500,
-                        width=600
-                )
-        # Display the plotly chart
-        st.plotly_chart(fig,
-                        use_container_width=True,
-                        key=key)
-    if save_chart:
-        # Add data to the chat history
-        st.session_state.messages.append({
-                "type": "plotly",
-                "content": df,
-                "key": key,
-                "tool_name": tool_name
-            })
-
-def render_table(df: pd.DataFrame,
-                 tool_name: str,
-                 key: str,
-                 save_table: bool = False
-                ):
-    """
-    Function to render the table in the chat.
-    """
-    # print (st.session_state['toggle_simulate_model_'+key.split("_")[-1]])
-    toggle_state = st.session_state[f'toggle_table_{tool_name}_{key.split("_")[-1]}']
-    if toggle_state:
-        st.dataframe(df,
-                    use_container_width=True,
-                    key=key)
-    if save_table:
-        # Add data to the chat history
-        st.session_state.messages.append({
-                "type": "dataframe",
-                "content": df,
-                "key": key,
-                "tool_name": tool_name
-            })
-
-@st.dialog("Warning ⚠️")
-def update_llm_model():
-    """
-    Function to update the LLM model.
-    """
-    llm_model = st.session_state.llm_model
-    st.warning(f"Clicking 'Continue' will reset all agents, \
-            set the selected LLM to {llm_model}. \
-            This action will reset the entire app, \
-            and agents will lose access to the \
-            conversation history. Are you sure \
-            you want to proceed?")
-    if st.button("Continue"):
-        # st.session_state.vote = {"item": item, "reason": reason}
-        # st.rerun()
-        # Delete all the items in Session state
-        for key in st.session_state.keys():
-            if key in ["messages", "app"]:
-                del st.session_state[key]
-        st.rerun()
-
 # Main layout of the app split into two columns
 main_col1, main_col2 = st.columns([3, 7])
 # First column
@@ -204,7 +92,7 @@ with main_col1:
             llms,
             index=0,
             key="llm_model",
-            on_change=update_llm_model
+            on_change=streamlit_utils.update_llm_model
         )
 
         # Upload files (placeholder)
@@ -216,6 +104,12 @@ with main_col1:
                 a biological model, and ask questions
                 about the simulation results.'''
             )
+
+        # Help text
+        st.button("Help button",
+                  icon="ℹ️",
+                  on_click=streamlit_utils.help_button,
+                  use_container_width=False)
 
     with st.container(border=False, height=500):
         prompt = st.chat_input("Say something ...", key="st_chat_input")
@@ -236,19 +130,19 @@ with main_col2:
                     st.markdown(message["content"].content)
                     st.empty()
             elif message["type"] == "plotly":
-                render_plotly(message["content"],
+                streamlit_utils.render_plotly(message["content"],
                               key=message["key"],
                               tool_name=message["tool_name"],
                               save_chart=False)
                 st.empty()
             elif message["type"] == "toggle":
-                render_toggle(key=message["key"],
+                streamlit_utils.render_toggle(key=message["key"],
                                     toggle_text=message["content"],
                                     toggle_state=message["toggle_state"],
                                     save_toggle=False)
                 st.empty()
             elif message["type"] == "dataframe":
-                render_table(message["content"],
+                streamlit_utils.render_table(message["content"],
                                 key=message["key"],
                                 tool_name=message["tool_name"],
                                 save_table=False)
@@ -353,7 +247,7 @@ with main_col2:
                         # Work on the message if it is a ToolMessage
                         # These may contain additional visuals that
                         # need to be displayed to the user.
-                        print("ToolMessage", msg)
+                        # print("ToolMessage", msg)
                         if msg.name in ["simulate_model", "custom_plotter"]:
                             df_simulated = pd.DataFrame.from_dict(
                                                 current_state.values["dic_simulated_data"])
@@ -370,26 +264,42 @@ with main_col2:
                                 else:
                                     continue
                             # Display the toggle button to suppress the table
-                            render_toggle(
+                            streamlit_utils.render_toggle(
                                 key="toggle_plotly_"+msg.name+'_'+str(st.session_state.run_id),
                                 toggle_text="Show Plot",
                                 toggle_state=True,
                                 save_toggle=True)
                             # Display the plotly chart
-                            render_plotly(
+                            streamlit_utils.render_plotly(
                                 df_selected,
                                 key="plotly_"+msg.name+'_'+str(st.session_state.run_id),
                                 tool_name=msg.name,
                                 save_chart=True)
                             # Display the toggle button to suppress the table
-                            render_toggle(
+                            streamlit_utils.render_toggle(
                                 key="toggle_table_"+msg.name+'_'+str(st.session_state.run_id),
                                 toggle_text="Show Table",
                                 toggle_state=False,
                                 save_toggle=True)
                             # Display the table
-                            render_table(
+                            streamlit_utils.render_table(
                                 df_selected,
+                                key="dataframe_"+msg.name+'_'+str(st.session_state.run_id),
+                                tool_name=msg.name,
+                                save_table=True)
+                            st.empty()
+                        elif msg.name in ["ask_question"]:
+                            df_simulated = pd.DataFrame.from_dict(
+                                                current_state.values["dic_simulated_data"])
+                            # Display the toggle button to suppress the table
+                            streamlit_utils.render_toggle(
+                                key="toggle_table_"+msg.name+'_'+str(st.session_state.run_id),
+                                toggle_text="Show Table",
+                                toggle_state=False,
+                                save_toggle=True)
+                            # Display the table
+                            streamlit_utils.render_table(
+                                df_simulated,
                                 key="dataframe_"+msg.name+'_'+str(st.session_state.run_id),
                                 tool_name=msg.name,
                                 save_table=True)
@@ -399,6 +309,6 @@ with main_col2:
             feedback = streamlit_feedback(
                 feedback_type="thumbs",
                 optional_text_label="[Optional] Please provide an explanation",
-                on_submit=_submit_feedback,
+                on_submit=streamlit_utils.submit_feedback,
                 key=f"feedback_{st.session_state.run_id}"
             )

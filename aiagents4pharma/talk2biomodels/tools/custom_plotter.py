@@ -28,10 +28,10 @@ class CustomPlotterInput(BaseModel):
 # can lead to unexpected behavior.
 class CustomPlotterTool(BaseTool):
     """
-    Tool for plotting a custom plot.
+    Tool for making custom plots
     """
     name: str = "custom_plotter"
-    description: str = "A tool to plot a custom figure."
+    description: str = "A tool to make custom plots of the simulation results"
     args_schema: Type[BaseModel] = CustomPlotterInput
     response_format: str = "content_and_artifact"
 
@@ -66,7 +66,7 @@ class CustomPlotterTool(BaseTool):
             A list of species based on user question.
             """
             relevant_species: Union[None, List[Literal[*species_names]]] = Field(
-                                        description="List of species based on user question.")
+                    description="List of species based on user question. If no relevant species are found, it will be None.")
         # Create an instance of the LLM model
         llm = ChatOpenAI(model=state['llm_model'], temperature=0)
         llm_with_structured_output = llm.with_structured_output(CustomHeader)
