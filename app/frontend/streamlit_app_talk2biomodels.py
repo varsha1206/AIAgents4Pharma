@@ -9,7 +9,6 @@ import sys
 import random
 import streamlit as st
 import pandas as pd
-from st_aggrid import AgGrid
 from streamlit_feedback import streamlit_feedback
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_core.messages import ChatMessage
@@ -232,7 +231,8 @@ with main_col2:
                         st.session_state.run_id = cb.traced_runs[-1].id
                     # print(response["messages"])
                     current_state = app.get_state(config)
-                    # print (current_state.values["model_id"])
+                    print ('steady_state', len(current_state.values["dic_steady_state_data"]))
+                    # print (current_state.values["dic_steady_state_data"])
 
                     # Add response to chat history
                     assistant_msg = ChatMessage(
@@ -266,6 +266,7 @@ with main_col2:
                         # may make multiple tool calls before the
                         # final response to the user.
                         if isinstance(msg, AIMessage):
+                            # print ("AIMessage", msg)
                             continue
                         # Work on the message if it is a ToolMessage
                         # These may contain additional visuals that
@@ -282,6 +283,7 @@ with main_col2:
                         uniq_msg_id = msg.name+'_'+msg.tool_call_id+'_'+str(st.session_state.run_id)
                         if msg.name in ["simulate_model", "custom_plotter"]:
                             if msg.name == "simulate_model":
+                                print ('-', len(current_state.values["dic_simulated_data"]), 'simulate_model')
                                 # Convert the simulated data to a single dictionary
                                 dic_simulated_data = {}
                                 for data in current_state.values["dic_simulated_data"]:
@@ -350,12 +352,6 @@ with main_col2:
                                 df_selected = pd.DataFrame(
                                     df_scanned_data[df_scanned_data['tool_call_id'] == msg.tool_call_id]['data'].iloc[count])
                                 # Display the toggle button to suppress the table
-                                streamlit_utils.render_toggle(
-                                    key="toggle_table_"+uniq_msg_id+'_'+str(count),
-                                    toggle_text="Show Table",
-                                    toggle_state=False,
-                                    save_toggle=True)
-                                # Display the table
                                 streamlit_utils.render_table_plotly(
                                 uniq_msg_id+'_'+str(count),
                                 df_scanned_current_tool_call['name'].iloc[count],
