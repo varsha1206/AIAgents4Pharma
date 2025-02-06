@@ -68,7 +68,9 @@ include = ["aiagents4pharma*"]
 [tool.setuptools.package-data]
 aiagents4pharma = [
             "configs/*",
-            "configs/talk2biomodels/agents/t2b_agent/*"]
+            "configs/talk2biomodels/agents/t2b_agent/*",
+            "configs/talk2biomodels/tools/ask_question/*",
+            "configs/talk2biomodels/tools/get_annotation/*"]
 
 [tool.pytest.ini_options]
 asyncio_default_fixture_loop_scope = "function"
