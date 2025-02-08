@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Main agent for the talk2competitors app.
+Main agent for the talk2scholars app.
 """
 
 import logging
@@ -15,7 +15,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command
 from ..agents import s2_agent
 from ..config.config import config
-from ..state.state_talk2competitors import Talk2Competitors
+from ..state.state_talk2scholars import Talk2Scholars
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -34,12 +34,12 @@ def make_supervisor_node(llm: BaseChatModel) -> str:
     """
     # options = ["FINISH", "s2_agent"]
 
-    def supervisor_node(state: Talk2Competitors) -> Command[Literal["s2_agent", "__end__"]]:
+    def supervisor_node(state: Talk2Scholars) -> Command[Literal["s2_agent", "__end__"]]:
         """
         Supervisor node that routes to appropriate sub-agents.
 
         Args:
-            state (Talk2Competitors): The current state of the conversation.
+            state (Talk2Scholars): The current state of the conversation.
 
         Returns:
             Command[Literal["s2_agent", "__end__"]]: The command to execute next.
@@ -91,12 +91,12 @@ def get_app(thread_id: str, llm_model ='gpt-4o-mini') -> StateGraph:
     Returns:
         The compiled langraph app.
     """
-    def call_s2_agent(state: Talk2Competitors) -> Command[Literal["__end__"]]:
+    def call_s2_agent(state: Talk2Scholars) -> Command[Literal["__end__"]]:
         """
         Node for calling the S2 agent.
 
         Args:
-            state (Talk2Competitors): The current state of the conversation.
+            state (Talk2Scholars): The current state of the conversation.
 
         Returns:
             Command[Literal["__end__"]]: The command to execute next.
@@ -115,7 +115,7 @@ def get_app(thread_id: str, llm_model ='gpt-4o-mini') -> StateGraph:
             },
         )
     llm = ChatOpenAI(model=llm_model, temperature=0)
-    workflow = StateGraph(Talk2Competitors)
+    workflow = StateGraph(Talk2Scholars)
 
     supervisor = make_supervisor_node(llm)
     workflow.add_node("supervisor", supervisor)

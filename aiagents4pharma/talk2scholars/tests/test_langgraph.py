@@ -1,5 +1,5 @@
 """
-Unit and integration tests for Talk2Competitors system.
+Unit and integration tests for Talk2Scholars system.
 Each test focuses on a single, specific functionality.
 Tests are deterministic and independent of each other.
 """
@@ -10,7 +10,7 @@ import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 
 from ..agents.main_agent import get_app, make_supervisor_node
-from ..state.state_talk2competitors import replace_dict
+from ..state.state_talk2scholars import replace_dict
 from ..tools.s2.display_results import display_results
 from ..tools.s2.multi_paper_rec import get_multi_paper_recommendations
 from ..tools.s2.search import search_tool

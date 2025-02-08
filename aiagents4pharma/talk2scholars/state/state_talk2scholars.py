@@ -1,5 +1,5 @@
 """
-This is the state file for the talk2comp agent.
+This is the state file for the talk2scholars agent.
 """
 
 import logging
@@ -19,9 +19,9 @@ def replace_dict(existing: Dict[str, Any], new: Dict[str, Any]) -> Dict[str, Any
     return new
 
 
-class Talk2Competitors(AgentState):
+class Talk2Scholars(AgentState):
     """
-    The state for the talk2comp agent, inheriting from AgentState.
+    The state for the talk2scholars agent, inheriting from AgentState.
     """
 
     papers: Annotated[Dict[str, Any], replace_dict]  # Changed from List to Dict

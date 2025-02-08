@@ -11,7 +11,7 @@ from langgraph.graph import START, StateGraph
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import MemorySaver
 from ..config.config import config
-from ..state.state_talk2competitors import Talk2Competitors
+from ..state.state_talk2scholars import Talk2Scholars
 # from ..tools.s2 import s2_tools
 from ..tools.s2.search import search_tool
 from ..tools.s2.display_results import display_results
@@ -28,7 +28,7 @@ def get_app(uniq_id, llm_model='gpt-4o-mini'):
     '''
     This function returns the langraph app.
     '''
-    def agent_s2_node(state: Talk2Competitors):
+    def agent_s2_node(state: Talk2Scholars):
         '''
         This function calls the model.
         '''
@@ -47,13 +47,13 @@ def get_app(uniq_id, llm_model='gpt-4o-mini'):
     model = create_react_agent(
                             llm,
                             tools=tools,
-                            state_schema=Talk2Competitors,
+                            state_schema=Talk2Scholars,
                             state_modifier=config.S2_AGENT_PROMPT,
                             checkpointer=MemorySaver()
                         )
 
     # Define a new graph
-    workflow = StateGraph(Talk2Competitors)
+    workflow = StateGraph(Talk2Scholars)
 
     # Define the two nodes we will cycle between
     workflow.add_node("agent_s2", agent_s2_node)
