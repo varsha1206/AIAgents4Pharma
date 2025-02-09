@@ -5,8 +5,8 @@ Main agent for the talk2scholars app.
 """
 
 import logging
-from typing import Literal
-from dotenv import load_dotenv
+from typing import Literal, Any
+import hydra
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage
 from langchain_openai import ChatOpenAI
@@ -14,27 +14,26 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command
 from ..agents import s2_agent
-from ..config.config import config
 from ..state.state_talk2scholars import Talk2Scholars
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-load_dotenv()
 
-def make_supervisor_node(llm: BaseChatModel) -> str:
+def make_supervisor_node(llm: BaseChatModel, cfg: Any) -> str:
     """
     Creates a supervisor node following LangGraph patterns.
 
     Args:
         llm (BaseChatModel): The language model to use for generating responses.
+        cfg (Any): The configuration object.
 
     Returns:
         str: The supervisor node function.
     """
-    # options = ["FINISH", "s2_agent"]
-
-    def supervisor_node(state: Talk2Scholars) -> Command[Literal["s2_agent", "__end__"]]:
+    def supervisor_node(
+        state: Talk2Scholars,
+    ) -> Command[Literal["s2_agent", "__end__"]]:
         """
         Supervisor node that routes to appropriate sub-agents.
 
@@ -44,9 +43,13 @@ def make_supervisor_node(llm: BaseChatModel) -> str:
         Returns:
             Command[Literal["s2_agent", "__end__"]]: The command to execute next.
         """
-        logger.info("Supervisor node called")
+        logger.info(
+            "Supervisor node called - Messages count: %d, Current Agent: %s",
+            len(state["messages"]),
+            state.get("current_agent", "None"),
+        )
 
-        messages = [{"role": "system", "content": config.MAIN_AGENT_PROMPT}] + state[
+        messages = [{"role": "system", "content": cfg.state_modifier}] + state[
             "messages"
         ]
         response = llm.invoke(messages)
@@ -81,7 +84,8 @@ def make_supervisor_node(llm: BaseChatModel) -> str:
 
     return supervisor_node
 
-def get_app(thread_id: str, llm_model ='gpt-4o-mini') -> StateGraph:
+
+def get_app(thread_id: str, llm_model="gpt-4o-mini") -> StateGraph:
     """
     Returns the langraph app with hierarchical structure.
 
@@ -91,6 +95,16 @@ def get_app(thread_id: str, llm_model ='gpt-4o-mini') -> StateGraph:
     Returns:
         The compiled langraph app.
     """
+
+    # Load hydra configuration
+    logger.log(logging.INFO, "Load Hydra configuration for Talk2Scholars main agent.")
+    with hydra.initialize(version_base=None, config_path="../../configs"):
+        cfg = hydra.compose(
+            config_name="config", overrides=["agents/talk2scholars/main_agent=default"]
+        )
+        cfg = cfg.agents.talk2scholars.main_agent
+        logger.info("Hydra configuration loaded with values: %s", cfg)
+
     def call_s2_agent(state: Talk2Scholars) -> Command[Literal["__end__"]]:
         """
         Node for calling the S2 agent.
@@ -101,10 +115,10 @@ def get_app(thread_id: str, llm_model ='gpt-4o-mini') -> StateGraph:
         Returns:
             Command[Literal["__end__"]]: The command to execute next.
         """
-        logger.info("Calling S2 agent")
+        logger.info("Calling S2 agent with state: %s", state)
         app = s2_agent.get_app(thread_id, llm_model)
         response = app.invoke(state)
-        logger.info("S2 agent completed")
+        logger.info("S2 agent completed with response: %s", response)
         return Command(
             goto=END,
             update={
@@ -114,10 +128,17 @@ def get_app(thread_id: str, llm_model ='gpt-4o-mini') -> StateGraph:
                 "current_agent": "s2_agent",
             },
         )
-    llm = ChatOpenAI(model=llm_model, temperature=0)
+
+    logger.log(
+        logging.INFO,
+        "Using OpenAI model %s with temperature %s",
+        llm_model,
+        cfg.temperature
+    )
+    llm = ChatOpenAI(model=llm_model, temperature=cfg.temperature)
     workflow = StateGraph(Talk2Scholars)
 
-    supervisor = make_supervisor_node(llm)
+    supervisor = make_supervisor_node(llm, cfg)
     workflow.add_node("supervisor", supervisor)
     workflow.add_node("s2_agent", call_s2_agent)
 
