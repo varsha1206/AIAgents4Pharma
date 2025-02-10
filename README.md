@@ -10,7 +10,7 @@
 
 Welcome to **AIAgents4Pharma** – an open-source project by [Team VPE](https://github.com/VirtualPatientEngine) that brings together AI-driven tools to help researchers and pharma interact seamlessly with complex biological data.
 
-Our toolkit currently consists of three intelligent agents, each designed to simplify and enhance access to specialized data in biology:
+Our toolkit currently consists of the following agents:
 
 - **Talk2BioModels** _(v1 releases; v2 in progress)_: Engage directly with mathematical models in systems biology.
 - **Talk2KnowledgeGraphs** _(v1 in progress)_: Access and explore complex biological knowledge graphs for insightful data connections.

@@ -10,7 +10,7 @@
 
 Welcome to **AIAgents4Pharma** – an open-source project by [Team VPE](https://github.com/VirtualPatientEngine) that brings together AI-driven tools to help researchers and pharma interact seamlessly with complex biological data.
 
-Our toolkit currently consists of three intelligent agents, each designed to simplify and enhance access to specialized data in biology:
+Our toolkit currently consists of the following agents:
 
 - **Talk2BioModels** _(v1 releases; v2 in progress)_: Engage directly with mathematical models in systems biology.
 - **Talk2KnowledgeGraphs** _(v1 in progress)_: Access and explore complex biological knowledge graphs for insightful data connections.
@@ -21,17 +21,7 @@ Our toolkit currently consists of three intelligent agents, each designed to sim
 
 ## Getting Started
 
-<<<<<<< HEAD
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FVirtualPatientEngine%2FAIAgents4Pharma%2Frefs%2Fheads%2Fmain%2Fpyproject.toml)
-=======
-- [**Talk2Scholars**](talk2scholars/intro.md) *(Coming soon)*: Access articles and receive recommendations for academic papers using state-of-the-art natural language processing
-
-### Prerequisites
-
-- **Python 3.10+**
-- **Git**
-- Required libraries specified in `requirements.txt`
->>>>>>> 486113347188c90dce7a881aac1d28ed4c9217d2
 
 ### Installation
 
