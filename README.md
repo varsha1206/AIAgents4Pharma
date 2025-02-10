@@ -12,7 +12,7 @@ Welcome to **AIAgents4Pharma** – an open-source project by [Team VPE](https://
 
 Our toolkit currently consists of the following agents:
 
-- **Talk2BioModels** _(v1 releases; v2 in progress)_: Engage directly with mathematical models in systems biology.
+- **Talk2BioModels** _(v1 released; v2 in progress)_: Engage directly with mathematical models in systems biology.
 - **Talk2KnowledgeGraphs** _(v1 in progress)_: Access and explore complex biological knowledge graphs for insightful data connections.
 - **Talk2Scholars** _(v1 in progress)_: Get recommendations for articles related to your choice. Download, query, and write/retrieve them to your reference manager (currently supporting Zotero).
 - **Talk2Cells** _(v1 in progress)_: Query and analyze sequencing data with ease.
