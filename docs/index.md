@@ -21,7 +21,17 @@ Our toolkit currently consists of three intelligent agents, each designed to sim
 
 ## Getting Started
 
+<<<<<<< HEAD
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FVirtualPatientEngine%2FAIAgents4Pharma%2Frefs%2Fheads%2Fmain%2Fpyproject.toml)
+=======
+- [**Talk2Scholars**](talk2scholars/intro.md) *(Coming soon)*: Access articles and receive recommendations for academic papers using state-of-the-art natural language processing
+
+### Prerequisites
+
+- **Python 3.10+**
+- **Git**
+- Required libraries specified in `requirements.txt`
+>>>>>>> 486113347188c90dce7a881aac1d28ed4c9217d2
 
 ### Installation
 
