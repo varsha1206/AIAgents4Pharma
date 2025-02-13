@@ -19,4 +19,4 @@ jobs:
         with:
           file: aiagents4pharma/talk2biomodels/Dockerfile
           push: true
-          tags: virtualpatientengine/Talk2Biomodels:v1
+          tags: virtualpatientengine/talk2biomodels:v1
