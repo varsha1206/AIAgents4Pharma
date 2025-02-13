@@ -33,7 +33,22 @@ pip install aiagents4pharma
 
 Check out the tutorials on each agent for detailed instrcutions.
 
-#### Option 2: git
+#### Option 2: docker hub
+
+_Please note that this option is currently available only for Talk2Biomodels._
+
+1. **Pull the image**
+   ```
+   docker pull virtualpatientengine/talk2biomodels
+   ```
+2. **Run a container**
+   ```
+   docker run -e OPENAI_API_KEY=<openai_api_key> -e NVIDIA_API_KEY=<nvidia_api_key> -p 8501:8501 virtualpatientengine/talk2biomodels
+   ```
+_You can create a free account at NVIDIA and apply for their
+free credits [here](https://build.nvidia.com/explore/discover)._
+
+#### Option 3: git
 
 1. **Clone the repository:**
    ```bash
