@@ -99,7 +99,7 @@ _Both `Talk2Biomodels` and `Talk2Scholars` are now available on Docker Hub._
    ```bash
    pip install -r requirements.txt
    ```
-   The current version of T2K requires additional Ollama library to be installed.
+   The current version of T2KG requires additional Ollama library to be installed.
 
    Ollama can be easily downloaded and installed from the following link: [https://ollama.com/download](https://ollama.com/download)
 
