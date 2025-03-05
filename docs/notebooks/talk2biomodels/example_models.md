@@ -13,12 +13,12 @@ Model [description](https://www.ebi.ac.uk/biomodels/BIOMD0000000537) and [the or
 
 ## Model without annotations
 
-See [here (sbml)](./Dwivedi_Model537_empty.xml).
+Download [here (sbml)](./Dwivedi_Model537_empty.xml).
 
 ## Fully annotated model
 
-See [here (sbml)](./Dwivedi_Model537_annotated.xml).
+Download [here (sbml)](./Dwivedi_Model537_annotated.xml).
 
 ## IDs of annotations
 
-See [here (.xlsx)](./model537_mapping.xlsx).
+Download [here (.xlsx)](./model537_mapping.xlsx).
