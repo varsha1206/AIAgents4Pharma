@@ -94,7 +94,7 @@ def dummy_requests_post_success(url, headers, params, data, timeout):
             {
                 "paperId": "paperA",
                 "title": "Multi Rec Paper A",
-                "authors": ["Author X"],
+                "authors": [{"name": "Author X", "authorId": "AX"}],
                 "year": 2019,
                 "citationCount": 12,
                 "url": "http://paperA",
@@ -103,7 +103,7 @@ def dummy_requests_post_success(url, headers, params, data, timeout):
             {
                 "paperId": "paperB",
                 "title": "Multi Rec Paper B",
-                "authors": ["Author Y"],
+                "authors": [{"name": "Author Y", "authorId": "AY"}],
                 "year": 2020,
                 "citationCount": 18,
                 "url": "http://paperB",
@@ -112,7 +112,7 @@ def dummy_requests_post_success(url, headers, params, data, timeout):
             {
                 "paperId": "paperC",
                 "title": "Multi Rec Paper C",
-                "authors": None,  # This one should be filtered out.
+                "authors": None,  # This paper should be filtered out.
                 "year": 2021,
                 "citationCount": 25,
                 "url": "http://paperC",
@@ -277,6 +277,29 @@ def test_multi_paper_rec_requests_exception(monkeypatch):
     }
     with pytest.raises(
         RuntimeError,
-        match="Failed to connect to Semantic Scholar API. Please retry the same query.",
+        match="Failed to connect to Semantic Scholar API after 10 attempts."
+        "Please retry the same query.",
+    ):
+        get_multi_paper_recommendations.run(input_data)
+
+
+def test_multi_paper_rec_no_response(monkeypatch):
+    """
+    Test that get_multi_paper_recommendations raises a RuntimeError when no response is obtained.
+    This is simulated by patching 'range' in the underlying function's globals to
+    return an empty iterator,
+    so that the for loop does not iterate and response remains None.
+    """
+    # Patch 'range' in the underlying function's globals (accessed via .func.__globals__)
+    monkeypatch.setitem(
+        get_multi_paper_recommendations.func.__globals__, "range", lambda x: iter([])
+    )
+    tool_call_id = "test_tool_call_id"
+    input_data = {
+        "paper_ids": ["p1", "p2"],
+        "tool_call_id": tool_call_id,
+    }
+    with pytest.raises(
+        RuntimeError, match="Failed to obtain a response from the Semantic Scholar API."
     ):
         get_multi_paper_recommendations.run(input_data)

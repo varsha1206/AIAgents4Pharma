@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 
 """
-Main agent for the talk2scholars app using ReAct pattern.
+Main agent module for initializing and running the Talk2Scholars application.
 
-This module implements a hierarchical agent system where a supervisor agent
-routes queries to specialized sub-agents. It follows the LangGraph patterns
-for multi-agent systems and implements proper state management.
+This module sets up the hierarchical agent system using LangGraph and integrates
+various sub-agents for handling different tasks such as semantic scholar, zotero,
+PDF processing, and paper downloading.
+
+Functions:
+- get_app: Initializes and returns the LangGraph-based hierarchical agent system.
 """
 
 import logging
@@ -16,6 +19,8 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.checkpoint.memory import MemorySaver
 from ..agents.s2_agent import get_app as get_app_s2
 from ..agents.zotero_agent import get_app as get_app_zotero
+from ..agents.pdf_agent import get_app as get_app_pdf
+from ..agents.paper_download_agent import get_app as get_app_paper_download
 from ..state.state_talk2scholars import Talk2Scholars
 
 # Initialize logger
@@ -43,12 +48,13 @@ def get_app(uniq_id, llm_model: BaseChatModel):
         >>> app = get_app("thread_123")
         >>> result = app.invoke(initial_state)
     """
-    if llm_model.model_name == "gpt-4o-mini":
-        llm_model = ChatOpenAI(
-            model="gpt-4o-mini",
-            temperature=0,
-            model_kwargs={"parallel_tool_calls": False},
-        )
+    if hasattr(llm_model, "model_name"):
+        if llm_model.model_name == "gpt-4o-mini":
+            llm_model = ChatOpenAI(
+                model="gpt-4o-mini",
+                temperature=0,
+                model_kwargs={"parallel_tool_calls": False},
+            )
     # Load hydra configuration
     logger.log(logging.INFO, "Launching Talk2Scholars with thread_id %s", uniq_id)
     with hydra.initialize(version_base=None, config_path="../configs/"):
@@ -62,6 +68,8 @@ def get_app(uniq_id, llm_model: BaseChatModel):
         [
             get_app_s2(uniq_id, llm_model),  # semantic scholar
             get_app_zotero(uniq_id, llm_model),  # zotero
+            get_app_pdf(uniq_id, llm_model),  # pdf
+            get_app_paper_download(uniq_id, llm_model),  # paper download
         ],
         model=llm_model,
         state_schema=Talk2Scholars,

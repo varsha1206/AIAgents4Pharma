@@ -30,7 +30,7 @@ class MultiPaperRecInput(BaseModel):
         description="List of Semantic Scholar Paper IDs to get recommendations for"
     )
     limit: int = Field(
-        default=2,
+        default=10,
         description="Maximum total number of recommendations to return",
         ge=1,
         le=500,
@@ -90,23 +90,33 @@ def get_multi_paper_recommendations(
         params["year"] = year
 
     # Wrap API call in try/except to catch connectivity issues and validate response format
-    try:
-        response = requests.post(
-            endpoint,
-            headers=headers,
-            params=params,
-            data=json.dumps(payload),
-            timeout=cfg.request_timeout,
-        )
-        response.raise_for_status()  # Raises HTTPError for bad responses
-    except requests.exceptions.RequestException as e:
-        logger.error(
-            "Failed to connect to Semantic Scholar API for multi-paper recommendations: %s",
-            e,
-        )
-        raise RuntimeError(
-            "Failed to connect to Semantic Scholar API. Please retry the same query."
-        ) from e
+    response = None
+    for attempt in range(10):
+        try:
+            response = requests.post(
+                endpoint,
+                headers=headers,
+                params=params,
+                data=json.dumps(payload),
+                timeout=cfg.request_timeout,
+            )
+            response.raise_for_status()  # Raises HTTPError for bad responses
+            break  # Exit loop if request is successful
+        except requests.exceptions.RequestException as e:
+            logger.error(
+                "Attempt %d: Failed to connect to Semantic Scholar API for "
+                "multi-paper recommendations: %s",
+                attempt + 1,
+                e,
+            )
+            if attempt == 9:  # Last attempt
+                raise RuntimeError(
+                    "Failed to connect to Semantic Scholar API after 10 attempts."
+                    "Please retry the same query."
+                ) from e
+
+    if response is None:
+        raise RuntimeError("Failed to obtain a response from the Semantic Scholar API.")
 
     logger.info(
         "API Response Status for multi-paper recommendations: %s", response.status_code
@@ -137,11 +147,22 @@ def get_multi_paper_recommendations(
     # Create a dictionary to store the papers
     filtered_papers = {
         paper["paperId"]: {
-            "paper_id": paper["paperId"],
+            "semantic_scholar_paper_id": paper["paperId"],
             "Title": paper.get("title", "N/A"),
             "Abstract": paper.get("abstract", "N/A"),
             "Year": paper.get("year", "N/A"),
+            "Publication Date": paper.get("publicationDate", "N/A"),
+            "Venue": paper.get("venue", "N/A"),
+            # "Publication Venue": (paper.get("publicationVenue") or {}).get("name", "N/A"),
+            # "Venue Type": (paper.get("publicationVenue") or {}).get("name", "N/A"),
+            "Journal Name": (paper.get("journal") or {}).get("name", "N/A"),
+            # "Journal Volume": paper.get("journal", {}).get("volume", "N/A"),
+            # "Journal Pages": paper.get("journal", {}).get("pages", "N/A"),
             "Citation Count": paper.get("citationCount", "N/A"),
+            "Authors": [
+                f"{author.get('name', 'N/A')} (ID: {author.get('authorId', 'N/A')})"
+                for author in paper.get("authors", [])
+            ],
             "URL": paper.get("url", "N/A"),
             "arxiv_id": paper.get("externalIds", {}).get("ArXiv", "N/A"),
         }
@@ -153,7 +174,10 @@ def get_multi_paper_recommendations(
     top_papers = list(filtered_papers.values())[:3]
     top_papers_info = "\n".join(
         [
-            f"{i+1}. {paper['Title']} ({paper['Year']})"
+            # f"{i+1}. {paper['Title']} ({paper['Year']})"
+            f"{i+1}. {paper['Title']} ({paper['Year']}; "
+            f"semantic_scholar_paper_id: {paper['semantic_scholar_paper_id']}; "
+            f"arXiv ID: {paper['arxiv_id']})"
             for i, paper in enumerate(top_papers)
         ]
     )
@@ -165,10 +189,10 @@ def get_multi_paper_recommendations(
         "Papers are attached as an artifact."
     )
     content += " Here is a summary of the recommendations:\n"
-    content += f"Number of papers found: {len(filtered_papers)}\n"
+    content += f"Number of recommended papers found: {len(filtered_papers)}\n"
     content += f"Query Paper IDs: {', '.join(paper_ids)}\n"
     content += f"Year: {year}\n" if year else ""
-    content += "Top papers:\n" + top_papers_info
+    content += "Here are a few of these papers:\n" + top_papers_info
 
     return Command(
         update={

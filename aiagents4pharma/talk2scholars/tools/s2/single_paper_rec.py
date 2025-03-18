@@ -14,6 +14,7 @@ from langchain_core.tools.base import InjectedToolCallId
 from langgraph.types import Command
 from pydantic import BaseModel, Field
 
+# pylint: disable=R0914,R0912,R0915
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ class SinglePaperRecInput(BaseModel):
 def get_single_paper_recommendations(
     paper_id: str,
     tool_call_id: Annotated[str, InjectedToolCallId],
-    limit: int = 5,
+    limit: int = 10,
     year: Optional[str] = None,
 ) -> Command[Any]:
     """
@@ -85,16 +86,28 @@ def get_single_paper_recommendations(
         params["year"] = year
 
     # Wrap API call in try/except to catch connectivity issues and check response format
-    try:
-        response = requests.get(endpoint, params=params, timeout=cfg.request_timeout)
-        response.raise_for_status()  # Raises HTTPError for bad responses
-    except requests.exceptions.RequestException as e:
-        logger.error(
-            "Failed to connect to Semantic Scholar API for recommendations: %s", e
-        )
-        raise RuntimeError(
-            "Failed to connect to Semantic Scholar API. Please retry the same query."
-        ) from e
+    response = None
+    for attempt in range(10):
+        try:
+            response = requests.get(
+                endpoint, params=params, timeout=cfg.request_timeout
+            )
+            response.raise_for_status()  # Raises HTTPError for bad responses
+            break  # Exit loop if request is successful
+        except requests.exceptions.RequestException as e:
+            logger.error(
+                "Attempt %d: Failed to connect to Semantic Scholar API for recommendations: %s",
+                attempt + 1,
+                e,
+            )
+            if attempt == 9:  # Last attempt
+                raise RuntimeError(
+                    "Failed to connect to Semantic Scholar API after 10 attempts."
+                    "Please retry the same query."
+                ) from e
+
+    if response is None:
+        raise RuntimeError("Failed to obtain a response from the Semantic Scholar API.")
 
     logger.info(
         "API Response Status for recommendations of paper %s: %s",
@@ -125,11 +138,22 @@ def get_single_paper_recommendations(
     # Extract paper ID and title from recommendations
     filtered_papers = {
         paper["paperId"]: {
-            "paper_id": paper["paperId"],
+            "semantic_scholar_paper_id": paper["paperId"],
             "Title": paper.get("title", "N/A"),
             "Abstract": paper.get("abstract", "N/A"),
             "Year": paper.get("year", "N/A"),
+            "Publication Date": paper.get("publicationDate", "N/A"),
+            "Venue": paper.get("venue", "N/A"),
+            # "Publication Venue": (paper.get("publicationVenue") or {}).get("name", "N/A"),
+            # "Venue Type": (paper.get("publicationVenue") or {}).get("name", "N/A"),
+            "Journal Name": (paper.get("journal") or {}).get("name", "N/A"),
+            # "Journal Volume": paper.get("journal", {}).get("volume", "N/A"),
+            # "Journal Pages": paper.get("journal", {}).get("pages", "N/A"),
             "Citation Count": paper.get("citationCount", "N/A"),
+            "Authors": [
+                f"{author.get('name', 'N/A')} (ID: {author.get('authorId', 'N/A')})"
+                for author in paper.get("authors", [])
+            ],
             "URL": paper.get("url", "N/A"),
             "arxiv_id": paper.get("externalIds", {}).get("ArXiv", "N/A"),
         }
@@ -141,7 +165,10 @@ def get_single_paper_recommendations(
     top_papers = list(filtered_papers.values())[:3]
     top_papers_info = "\n".join(
         [
-            f"{i+1}. {paper['Title']} ({paper['Year']})"
+            # f"{i+1}. {paper['Title']} ({paper['Year']})"
+            f"{i+1}. {paper['Title']} ({paper['Year']}; "
+            f"semantic_scholar_paper_id: {paper['semantic_scholar_paper_id']}; "
+            f"arXiv ID: {paper['arxiv_id']})"
             for i, paper in enumerate(top_papers)
         ]
     )
@@ -153,10 +180,9 @@ def get_single_paper_recommendations(
         "Papers are attached as an artifact. "
         "Here is a summary of the recommendations:\n"
     )
-    content += f"Number of papers found: {len(filtered_papers)}\n"
+    content += f"Number of recommended papers found: {len(filtered_papers)}\n"
     content += f"Query Paper ID: {paper_id}\n"
-    content += f"Year: {year}\n" if year else ""
-    content += "Top papers:\n" + top_papers_info
+    content += "Here are a few of these papers:\n" + top_papers_info
 
     return Command(
         update={
