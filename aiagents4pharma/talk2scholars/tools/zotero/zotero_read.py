@@ -13,9 +13,7 @@ from langchain_core.tools import tool
 from langchain_core.tools.base import InjectedToolCallId
 from langgraph.types import Command
 from pydantic import BaseModel, Field
-from aiagents4pharma.talk2scholars.tools.zotero.utils.zotero_path import (
-    get_item_collections,
-)
+from .utils.zotero_path import get_item_collections
 
 # pylint: disable=R0914,R0912,R0915
 
@@ -41,7 +39,7 @@ class ZoteroSearchInput(BaseModel):
 
 
 @tool(args_schema=ZoteroSearchInput, parse_docstring=True)
-def zotero_search_tool(
+def zotero_read(
     query: str,
     only_articles: bool,
     tool_call_id: Annotated[str, InjectedToolCallId],

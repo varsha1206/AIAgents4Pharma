@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Agent for interacting with Zotero
+Agent for interacting with Zotero with human-in-the-loop features
 """
 
 import logging
@@ -13,8 +13,9 @@ from langgraph.graph import START, StateGraph
 from langgraph.prebuilt import create_react_agent, ToolNode
 from langgraph.checkpoint.memory import MemorySaver
 from ..state.state_talk2scholars import Talk2Scholars
-from ..tools.zotero.zotero_read import zotero_search_tool
-from ..tools.zotero.zotero_write import zotero_save_tool
+from ..tools.zotero.zotero_read import zotero_read
+from ..tools.zotero.zotero_review import zotero_review
+from ..tools.zotero.zotero_write import zotero_write
 from ..tools.s2.display_results import display_results as s2_display
 from ..tools.s2.query_results import query_results as s2_query_results
 from ..tools.s2.retrieve_semantic_scholar_paper_id import (
@@ -32,7 +33,7 @@ def get_app(uniq_id, llm_model: BaseChatModel):
 
     This function sets up the Zotero agent, which integrates various tools to search,
     retrieve, and display research papers from Zotero. The agent follows the ReAct
-    pattern for structured interaction.
+    pattern for structured interaction and includes human-in-the-loop features.
 
     Args:
         uniq_id (str): Unique identifier for the current conversation session.
@@ -87,11 +88,12 @@ def get_app(uniq_id, llm_model: BaseChatModel):
     # Define the tools
     tools = ToolNode(
         [
-            zotero_search_tool,
+            zotero_read,
             s2_display,
             s2_query_results,
             retrieve_semantic_scholar_paper_id,
-            zotero_save_tool,
+            zotero_review,  # First review
+            zotero_write,  # Then save with user confirmation
         ]
     )
 
@@ -104,7 +106,7 @@ def get_app(uniq_id, llm_model: BaseChatModel):
         tools=tools,
         state_schema=Talk2Scholars,
         prompt=cfg.zotero_agent,
-        checkpointer=MemorySaver(),
+        checkpointer=MemorySaver(),  # Required for interrupts to work
     )
 
     workflow = StateGraph(Talk2Scholars)
