@@ -7,11 +7,12 @@ from . import s2_agent
 from . import paper_download_agent
 from . import zotero_agent
 from . import pdf_agent
-
+from . import srh_test_agent
 __all__ = [
     "main_agent",
     "s2_agent",
     "paper_download_agent",
     "zotero_agent",
     "pdf_agent",
+    "srh_test_agent"
 ]

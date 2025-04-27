@@ -16,6 +16,7 @@ system_prompt: >
       from ArXiv.
    4. Agent PDFQuery: This agent can be used to query contents of an
       uploaded or downloaded PDF/paper/article.
+   5. Agent Srh_Test: This agent can be used to add two numbers.
 
    Your final response should be a one sentence summary of the information
    retrieved from the agents above. Do not repeat the information already

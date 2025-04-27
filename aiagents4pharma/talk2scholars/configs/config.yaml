@@ -6,6 +6,7 @@ defaults:
   - agents/talk2scholars/zotero_agent: default
   - app/frontend: default
   - agents/talk2scholars/pdf_agent: default
+  - agents/talk2scholars/srh_test_agent: default
   - tools/search: default
   - tools/download_arxiv_paper: default
   - tools/single_paper_recommendation: default

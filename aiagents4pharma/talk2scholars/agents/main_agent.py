@@ -21,6 +21,7 @@ from ..agents.s2_agent import get_app as get_app_s2
 from ..agents.zotero_agent import get_app as get_app_zotero
 from ..agents.pdf_agent import get_app as get_app_pdf
 from ..agents.paper_download_agent import get_app as get_app_paper_download
+from ..agents.srh_test_agent import get_app as get_app_srhTest
 from ..state.state_talk2scholars import Talk2Scholars
 
 # Initialize logger
@@ -70,6 +71,7 @@ def get_app(uniq_id, llm_model: BaseChatModel):
             get_app_zotero(uniq_id, llm_model),  # zotero
             get_app_pdf(uniq_id, llm_model),  # pdf
             get_app_paper_download(uniq_id, llm_model),  # paper download
+            get_app_srhTest(uniq_id,llm_model) #wrong math
         ],
         model=llm_model,
         state_schema=Talk2Scholars,
