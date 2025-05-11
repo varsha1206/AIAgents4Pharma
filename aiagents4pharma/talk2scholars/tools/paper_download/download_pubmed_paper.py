@@ -40,7 +40,6 @@ def extract_metadata(metadata_url: str, pmc_id: str, pdf_download_url: str) -> d
     root = ET.fromstring(response.content)
     article_title = root.find('.//article-title')
     title = article_title.text.strip() if article_title is not None else "N/A"
-
     # Title
     title_elem = root.find('.//article-title')
     title = title_elem.text if title_elem is not None else "N/A"
@@ -70,11 +69,15 @@ def extract_metadata(metadata_url: str, pmc_id: str, pdf_download_url: str) -> d
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
         "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
             }
+    
     response = requests.get(pdf_url,timeout=10, headers=headers)
 
     if response.status_code != 200:
+        print("pdf not found")
         raise RuntimeError(f"No PDF found or access denied at {pdf_url}")
 
+
+    logger.info(f"Metadata from PubMedx for paper PMC ID: {pmc_id} and pdf_url {pdf_url} and title {title}")
     return {
         "Title": title,
         "Authors": authors,
@@ -96,24 +99,23 @@ def download_pubmedx_paper(
     """
     Get metadata and PDF URL for an PubMedX paper using unique DOI.
     """
-    logger.info("Fetching metadata from PubMedx for paper PMC ID: %s", pmc_id_id)
-
+    logger.info("Fetching metadata from PubMedx for paper PMC ID: %s", pmc_id)
+    logger.info("Loading Hydra Configs:")
     # Load configuration
     with hydra.initialize(version_base=None, config_path="../../configs"):
         cfg = hydra.compose(
             config_name="config", overrides=["tools/download_pubmed_paper=default"]
         )
-        api_url = cfg.tools.download_pubmed_paper.doi_converter_api
-        request_timeout = cfg.tools.download_pubmed_paper.request_timeout
         metadata_url = cfg.tools.download_pubmed_paper.metadata_url
-        pdf_download_url = cfg.download_pubmed_paper.pdf_base_url
+        pdf_download_url = cfg.tools.download_pubmed_paper.pdf_base_url
 
     # Extract metadata
     metadata = extract_metadata(metadata_url,pmc_id,pdf_download_url)
 
+
     # Create article_data entry with the paper ID as the key
     article_data = {pmc_id: metadata}
-
+    logger.info(f"Successfully retrieved metadata and PDF URL for PMC ID {pmc_id}")
     content = f"Successfully retrieved metadata and PDF URL for PMC ID {pmc_id}"
 
     return Command(
