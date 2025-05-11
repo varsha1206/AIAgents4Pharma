@@ -23,20 +23,10 @@ logger = logging.getLogger(__name__)
 class DownloadPubMedXInput(BaseModel):
     """Input schema for the pubmedx paper download tool."""
 
-    doi_id: str = Field(
-        description="The DOI ID used to retrieve the paper details and PDF URL."
+    pmc_id: str = Field(
+        description="The PMC ID used to retrieve the paper details and PDF URL."
     )
     tool_call_id: Annotated[str, InjectedToolCallId]
-
-
-def fetch_pubmedx_ids(
-    doi_converter_url: str, doi_id: str, request_timeout: int
-) -> ET.Element:
-    """Fetch and parse metadata from the PubMedX API."""
-    query_url = f"{doi_converter_url}{doi_id}"
-    response = requests.get(query_url, timeout=request_timeout)
-    response.raise_for_status()
-    return ET.fromstring(response.text)
 
 
 def extract_metadata(metadata_url: str, pmc_id: str, pdf_download_url: str) -> dict:
@@ -100,13 +90,13 @@ def extract_metadata(metadata_url: str, pmc_id: str, pdf_download_url: str) -> d
 
 @tool(args_schema=DownloadPubMedXInput, parse_docstring=True)
 def download_pubmedx_paper(
-    doi_id: str,
+    pmc_id: str,
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command[Any]:
     """
-    Get metadata and PDF URL for an PubMedX paper using its unique DOI.
+    Get metadata and PDF URL for an PubMedX paper using unique DOI.
     """
-    logger.info("Fetching metadata from PubMedx for paper PMC ID: %s", doi_id)
+    logger.info("Fetching metadata from PubMedx for paper PMC ID: %s", pmc_id_id)
 
     # Load configuration
     with hydra.initialize(version_base=None, config_path="../../configs"):
@@ -117,17 +107,6 @@ def download_pubmedx_paper(
         request_timeout = cfg.tools.download_pubmed_paper.request_timeout
         metadata_url = cfg.tools.download_pubmed_paper.metadata_url
         pdf_download_url = cfg.download_pubmed_paper.pdf_base_url
-
-    # Fetch and parse metadata
-    root = fetch_pubmedx_ids(api_url, doi_id, request_timeout)
-    record = root.find('record')
-    if record is None:
-        raise ValueError(f"No entry found for DOI ID {doi_id}")
-    
-    try:
-        pmc_id = record.attrib.get('pmcid')
-    except:
-        raise ValueError(f"PMC ID does not exist for the DOI id {doi_id}")
 
     # Extract metadata
     metadata = extract_metadata(metadata_url,pmc_id,pdf_download_url)
