@@ -64,14 +64,9 @@ def extract_metadata(metadata_url: str, pmc_id: str, pdf_download_url: str) -> d
     pub_date_elem = root.find('.//published')
     pub_date = pub_date_elem.text.strip() if pub_date_elem is not None else "N/A"
 
-    pdf_url = f"{pdf_download_url}{pmc_id}/pdf"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
-            }
+    pdf_url = f"{pdf_download_url}{pmc_id}?pdf=render"
+    response = requests.get(pdf_url,timeout=10)
     
-    response = requests.get(pdf_url,timeout=10, headers=headers)
-
     if response.status_code != 200:
         print("pdf not found")
         raise RuntimeError(f"No PDF found or access denied at {pdf_url}")
