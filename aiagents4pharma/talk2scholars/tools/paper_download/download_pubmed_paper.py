@@ -28,16 +28,22 @@ class DownloadPubMedXInput(BaseModel):
     )
     tool_call_id: Annotated[str, InjectedToolCallId]
 
-
-def extract_metadata(metadata_url: str, pmc_id: str, pdf_download_url: str) -> dict:
-    """Extract metadata for the PMC ID."""
+def fetch_metadata(
+    metadata_url: str, pmc_id: str
+) -> ET.Element:
+    """Fetch and parse metadata from the pubmed API."""
     params = {
     "db": "pmc",
     "id": pmc_id,
     "retmode": "xml"
     }
-    response = requests.get(metadata_url, params=params)
-    root = ET.fromstring(response.content)
+    response = requests.get(metadata_url, params=params,timeout=10)
+    response.raise_for_status()
+    return ET.fromstring(response.text)
+
+
+def extract_metadata(root: ET.Element, pmc_id: str, pdf_download_url: str) -> dict:
+    """Extract metadata for the PMC ID."""
     article_title = root.find('.//article-title')
     title = article_title.text.strip() if article_title is not None else "N/A"
     # Title
@@ -59,20 +65,16 @@ def extract_metadata(metadata_url: str, pmc_id: str, pdf_download_url: str) -> d
             authors.append(full_name)
     authors = ', '.join(authors) if authors else "N/A"
 
-
     # Publication Data
     pub_date_elem = root.find('.//published')
     pub_date = pub_date_elem.text.strip() if pub_date_elem is not None else "N/A"
 
     pdf_url = f"{pdf_download_url}{pmc_id}?pdf=render"
     response = requests.get(pdf_url,timeout=10)
-    
     if response.status_code != 200:
-        print("pdf not found")
         raise RuntimeError(f"No PDF found or access denied at {pdf_url}")
 
-
-    logger.info(f"Metadata from PubMedx for paper PMC ID: {pmc_id} and pdf_url {pdf_url} and title {title}")
+    logger.info("Metadata from PubMedx for paper PMC ID: %s", pmc_id)
     return {
         "Title": title,
         "Authors": authors,
@@ -105,12 +107,10 @@ def download_pubmedx_paper(
         pdf_download_url = cfg.tools.download_pubmed_paper.pdf_base_url
 
     # Extract metadata
-    metadata = extract_metadata(metadata_url,pmc_id,pdf_download_url)
-
+    metadata = extract_metadata(fetch_metadata(metadata_url,pmc_id),pmc_id,pdf_download_url)
 
     # Create article_data entry with the paper ID as the key
     article_data = {pmc_id: metadata}
-    logger.info(f"Successfully retrieved metadata and PDF URL for PMC ID {pmc_id}")
     content = f"Successfully retrieved metadata and PDF URL for PMC ID {pmc_id}"
 
     return Command(

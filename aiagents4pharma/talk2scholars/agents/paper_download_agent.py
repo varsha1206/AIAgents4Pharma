@@ -32,7 +32,7 @@ def get_app(uniq_id, llm_model: BaseChatModel):
 
     Returns:
         StateGraph: A compiled LangGraph application that enables the paper download agent to
-            process user queries and retrieve arXiv papers.
+            process user queries and retrieve arXiv papers and pubmed papers.
     """
 
     # Load Hydra configuration
