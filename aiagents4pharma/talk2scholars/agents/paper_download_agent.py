@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-This module defines the paper download agent that connects to the arXiv API to fetch
+This module defines the paper download agent that connects to the arXiv API and PubmedX to fetch
 paper details and PDFs. It is part of the Talk2Scholars project.
 """
 
