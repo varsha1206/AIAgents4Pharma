@@ -70,8 +70,7 @@ def extract_metadata(root: ET.Element, pmc_id: str, pdf_download_url: str) -> di
     pub_date = pub_date_elem.text.strip() if pub_date_elem is not None else "N/A"
 
     pdf_url = f"{pdf_download_url}{pmc_id}?pdf=render"
-    response = requests.get(pdf_url,timeout=10)
-    if response.status_code != 200:
+    if requests.get(pdf_url,timeout=10).status_code != 200:
         raise RuntimeError(f"No PDF found or access denied at {pdf_url}")
 
     logger.info("Metadata from PubMedx for paper PMC ID: %s", pmc_id)
@@ -111,7 +110,7 @@ def download_pubmedx_paper(
 
     # Create article_data entry with the paper ID as the key
     article_data = {pmc_id: metadata}
-    content = f"Successfully retrieved metadata and PDF URL for PMC ID {pmc_id}"
+    content = f"Successfully retrieved metadata for PMC ID {pmc_id}"
 
     return Command(
         update={
