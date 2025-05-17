@@ -271,4 +271,4 @@ class TestDownloadPubMedXPaper(unittest.TestCase):
                 {"pmc_id": "10.1000/unknown-doi",
                 "tool_call_id": "mock_tool_id"}
             )
-        self.assertIn("PMC id not found for id 10.1000/unknown-doi", str(context.exception))
+        self.assertIn("PMC id not found for 10.1000/unknown-doi", str(context.exception))
