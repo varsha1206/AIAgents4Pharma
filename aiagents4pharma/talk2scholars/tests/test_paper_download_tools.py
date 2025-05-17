@@ -1,6 +1,6 @@
 """
 Unit tests for arXiv paper downloading functionality, including:
-- download_arxiv_paper tool function.
+- download_arxiv_paper unction.
 """
 
 import unittest
@@ -59,8 +59,7 @@ class TestDownloadArxivPaper(unittest.TestCase):
         mock_get.return_value = dummy_response
 
         tool_call_id = "test_tool_id"
-        tool_input = {"arxiv_id": arxiv_id, "tool_call_id": tool_call_id}
-        result = download_arxiv_paper.run(tool_input)
+        result = download_arxiv_paper(arxiv_id,tool_call_id)
         update = result.update
 
         # Check that article_data was correctly set.
@@ -116,9 +115,8 @@ class TestDownloadArxivPaper(unittest.TestCase):
         mock_get.return_value = dummy_response
 
         tool_call_id = "test_tool_id"
-        tool_input = {"arxiv_id": arxiv_id, "tool_call_id": tool_call_id}
         with self.assertRaises(ValueError) as context:
-            download_arxiv_paper.run(tool_input)
+            download_arxiv_paper(arxiv_id,tool_call_id)
         self.assertEqual(
             str(context.exception), f"No entry found for arXiv ID {arxiv_id}"
         )
@@ -162,9 +160,8 @@ class TestDownloadArxivPaper(unittest.TestCase):
         mock_get.return_value = dummy_response
 
         tool_call_id = "test_tool_id"
-        tool_input = {"arxiv_id": arxiv_id, "tool_call_id": tool_call_id}
         with self.assertRaises(RuntimeError) as context:
-            download_arxiv_paper.run(tool_input)
+            download_arxiv_paper(arxiv_id,tool_call_id)
         self.assertEqual(
             str(context.exception), f"Could not find PDF URL for arXiv ID {arxiv_id}"
         )

@@ -10,7 +10,6 @@ from typing import Annotated, Any
 import hydra
 import requests
 from langchain_core.messages import ToolMessage
-from langchain_core.tools import tool
 from langchain_core.tools.base import InjectedToolCallId
 from langgraph.types import Command
 from pydantic import BaseModel, Field
@@ -80,7 +79,6 @@ def extract_metadata(entry: ET.Element, ns: dict, arxiv_id: str) -> dict:
     }
 
 
-@tool(args_schema=DownloadArxivPaperInput, parse_docstring=True)
 def download_arxiv_paper(
     arxiv_id: str,
     tool_call_id: Annotated[str, InjectedToolCallId],
