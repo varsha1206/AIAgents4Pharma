@@ -28,19 +28,34 @@ class DownloadPubMedXInput(BaseModel):
     )
     tool_call_id: Annotated[str, InjectedToolCallId]
 
+def map_ids(
+        input_id: str,
+        map_url: str,
+        ) -> str:
+    """Fetch the PMC ID of paper given other IDs for Pubmed retrieval"""
+    response = requests.get(f"{map_url}?ids={input_id}", timeout=10)
+    response.raise_for_status()
+    root = ET.fromstring(response.text)
+    if((root.find('record') is not None) and (root.find('record').attrib.get('pmcid'))):
+        logger.info("Retrieved PMC ID for the given id %s",input_id)
+        return root.find('record').attrib.get('pmcid')
+    raise RuntimeError(f"PMC id not found for {input_id}")
+
 def fetch_metadata(
     metadata_url: str, pmc_id: str
 ) -> ET.Element:
     """Fetch and parse metadata from the pubmed API."""
-    params = {
-    "db": "pmc",
-    "id": pmc_id,
-    "retmode": "xml"
-    }
-    response = requests.get(metadata_url, params=params,timeout=10)
+    response = requests.get(
+        metadata_url,
+        params={
+            "db": "pmc",
+            "id": pmc_id,
+            "retmode": "xml"
+            },
+        timeout=10
+        )
     response.raise_for_status()
     return ET.fromstring(response.text)
-
 
 def extract_metadata(root: ET.Element, pmc_id: str, pdf_download_url: str) -> dict:
     """Extract metadata for the PMC ID."""
@@ -104,7 +119,13 @@ def download_pubmedx_paper(
         )
         metadata_url = cfg.tools.download_pubmed_paper.metadata_url
         pdf_download_url = cfg.tools.download_pubmed_paper.pdf_base_url
+        map_url = cfg.tools.download_pubmed_paper.map_url
 
+    #Mapping given id to pmc_id
+    if pmc_id.startswith("PMC"):
+        pass
+    else:
+        pmc_id = map_ids(pmc_id,map_url)
     # Extract metadata
     metadata = extract_metadata(fetch_metadata(metadata_url,pmc_id),pmc_id,pdf_download_url)
 

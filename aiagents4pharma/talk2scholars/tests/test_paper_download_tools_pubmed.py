@@ -174,3 +174,101 @@ class TestDownloadPubMedXPaper(unittest.TestCase):
             download_pubmedx_paper.run(tool_input)
 
         self.assertIn("No PDF found or access denied", str(context.exception))
+
+    @patch(
+    "aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper.hydra.initialize"
+    )
+    @patch(
+    "aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper.hydra.compose"
+    )
+    @patch(
+    "aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper.requests.get"
+    )
+    def test_download_with_mapping_to_pmc_id(self, mock_get, mock_compose, mock_initialize):
+        """Test case where the id cannot be mapped to pmc id."""
+        # Dummy config
+        dummy_cfg = MagicMock()
+        dummy_cfg.tools.download_pubmed_paper.metadata_url = "http://dummy.pubmed.org/api"
+        dummy_cfg.tools.download_pubmed_paper.pdf_base_url = "http://dummy.pubmed.org/pdf/"
+        dummy_cfg.tools.download_pubmed_paper.map_url = "http://dummy.pubmed.org/map"
+        mock_compose.return_value = dummy_cfg
+        mock_initialize.return_value.__enter__.return_value = None
+
+        # Input for successful mapping
+        non_pmc_input_id = "10.1000/test-doi"
+        resolved_pmc_id = "PMC123456"
+
+        # --- Mock `map_ids` XML response ---
+        dummy_map_response = MagicMock()
+        dummy_map_response.status_code = 200
+        dummy_map_response.text = f"""
+        <eSummaryResult>
+            <record pmcid="{resolved_pmc_id}"/>
+        </eSummaryResult>
+        """
+
+        # --- Mock metadata XML response ---
+        dummy_metadata_response = MagicMock()
+        dummy_metadata_response.status_code = 200
+        dummy_metadata_response.text = """
+        <article>
+            <front>
+                <article-meta>
+                    <title-group>
+                        <article-title>Mapped Paper Title</article-title>
+                    </title-group>
+                    <abstract>Mapped abstract here</abstract>
+                    <contrib-group>
+                        <contrib contrib-type="author">
+                            <name>
+                                <given-names>Jane</given-names>
+                                <surname>Smith</surname>
+                            </name>
+                        </contrib>
+                    </contrib-group>
+                    <pub-date><year>2022</year></pub-date>
+                </article-meta>
+            </front>
+        </article>
+        """
+
+        # --- Mock PDF availability check ---
+        dummy_pdf_response = MagicMock()
+        dummy_pdf_response.status_code = 200
+
+        # --- CASE 1: Success path ---
+        mock_get.side_effect = [
+            dummy_map_response,          # map_ids
+            dummy_metadata_response,     # fetch_metadata
+            dummy_pdf_response           # PDF check
+        ]
+
+        result = download_pubmedx_paper.run(
+            {"pmc_id": non_pmc_input_id,
+            "tool_call_id": "mock_tool_id"}
+        )
+
+        metadata = result.update["article_data"][resolved_pmc_id]
+        self.assertEqual(metadata["Title"], "Mapped Paper Title")
+        self.assertEqual(metadata["Abstract"], "Mapped abstract here")
+        self.assertIn("Jane Smith", metadata["Authors"])
+        self.assertEqual(metadata["Publication Date"], "N/A")
+        self.assertTrue(metadata["URL"].startswith("http://dummy.pubmed.org/pdf/PMC123456"))
+
+        # --- CASE 2: Mapping fails — test RuntimeError ---
+        failed_map_response = MagicMock()
+        failed_map_response.status_code = 200
+        failed_map_response.text = """
+        <eSummaryResult>
+            <!-- No record with pmcid -->
+        </eSummaryResult>
+        """
+
+        mock_get.side_effect = [failed_map_response]
+
+        with self.assertRaises(RuntimeError) as context:
+            download_pubmedx_paper.run(
+                {"pmc_id": "10.1000/unknown-doi",
+                "tool_call_id": "mock_tool_id"}
+            )
+        self.assertIn("PMC id not found for id 10.1000/unknown-doi", str(context.exception))
