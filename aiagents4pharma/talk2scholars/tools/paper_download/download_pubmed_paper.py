@@ -10,6 +10,7 @@ from typing import Annotated, Any
 import hydra
 import requests
 from langchain_core.messages import ToolMessage
+from langchain_core.tools import tool
 from langchain_core.tools.base import InjectedToolCallId
 from langgraph.types import Command
 from pydantic import BaseModel, Field
@@ -18,7 +19,18 @@ from pydantic import BaseModel, Field
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
+def get_pubmedx_config():
+    """Fetching Hydra configurations"""
+    logger.info("Loading Hydra Configs:")
+    with hydra.initialize(version_base=None, config_path="../../configs"):
+        cfg = hydra.compose(
+            config_name="config", overrides=["tools/download_pubmed_paper=default"]
+        )
+        return (
+            cfg.tools.download_pubmed_paper.metadata_url,
+            cfg.tools.download_pubmed_paper.pdf_base_url,
+            cfg.tools.download_pubmed_paper.map_url
+        )
 class DownloadPubMedXInput(BaseModel):
     """Input schema for the pubmedx paper download tool."""
 
@@ -58,9 +70,6 @@ def fetch_metadata(
 
 def extract_metadata(root: ET.Element, pmc_id: str, pdf_download_url: str) -> dict:
     """Extract metadata for the PMC ID."""
-    article_title = root.find('.//article-title')
-    title = article_title.text.strip() if article_title is not None else "N/A"
-    # Title
     title_elem = root.find('.//article-title')
     title = title_elem.text if title_elem is not None else "N/A"
 
@@ -69,15 +78,11 @@ def extract_metadata(root: ET.Element, pmc_id: str, pdf_download_url: str) -> di
     abstract = ''.join(abstract_elem.itertext()).strip() if abstract_elem is not None else "N/A"
 
     # Authors
-    authors = []
-    for contrib in root.findall('.//contrib[@contrib-type="author"]'):
-        name = contrib.find('name')
-        if name is not None:
-            given = name.findtext('given-names', default='')
-            surname = name.findtext('surname', default='')
-            full_name = f"{given} {surname}".strip()
-            authors.append(full_name)
-    authors = ', '.join(authors) if authors else "N/A"
+    authors = ', '.join(
+        f"{name.findtext('given-names', default='')} {name.findtext('surname', default='')}".strip()
+        for contrib in root.findall('.//contrib[@contrib-type="author"]')
+        if (name := contrib.find('name')) is not None
+    ) or "N/A"
 
     # Publication Data
     pub_date_elem = root.find('.//published')
@@ -101,6 +106,7 @@ def extract_metadata(root: ET.Element, pmc_id: str, pdf_download_url: str) -> di
     }
 
 
+@tool(args_schema=DownloadPubMedXInput, parse_docstring=True)
 def download_pubmedx_paper(
     pmc_id: str,
     tool_call_id: Annotated[str, InjectedToolCallId],
@@ -109,15 +115,8 @@ def download_pubmedx_paper(
     Get metadata and PDF URL for an PubMedX paper using unique DOI.
     """
     logger.info("Fetching metadata from PubMedx for paper PMC ID: %s", pmc_id)
-    logger.info("Loading Hydra Configs:")
-    # Load configuration
-    with hydra.initialize(version_base=None, config_path="../../configs"):
-        cfg = hydra.compose(
-            config_name="config", overrides=["tools/download_pubmed_paper=default"]
-        )
-        metadata_url = cfg.tools.download_pubmed_paper.metadata_url
-        pdf_download_url = cfg.tools.download_pubmed_paper.pdf_base_url
-        map_url = cfg.tools.download_pubmed_paper.map_url
+
+    metadata_url,pdf_download_url,map_url = get_pubmedx_config()
 
     #Mapping given id to pmc_id
     if pmc_id.startswith("PMC"):
