@@ -136,7 +136,8 @@ class SinglePaperRecData:
                 ],
                 "URL": paper.get("url", "N/A"),
                 "arxiv_id": paper.get("externalIds", {}).get("ArXiv", "N/A"),
-                "pmc_id": paper.get("externalIds", {}).get("PMCID", "N/A")
+                "pmc_id": paper.get("externalIds", {}).get("PubMedCentral", "N/A"),
+                "pm_id": paper.get("externalIds",{}).get("PubMed","N/A")
             }
             for paper in self.recommendations
             if paper.get("title") and paper.get("authors")
