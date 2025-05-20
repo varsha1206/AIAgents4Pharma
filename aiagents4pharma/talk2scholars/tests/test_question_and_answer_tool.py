@@ -3,11 +3,14 @@ Unit tests for question_and_answer tool functionality.
 """
 
 import unittest
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
+from langchain_core.messages import ToolMessage
 
+import aiagents4pharma.talk2scholars.tools.pdf.question_and_answer as qa_module
 from aiagents4pharma.talk2scholars.tools.pdf.question_and_answer import (
     Vectorstore,
     generate_answer,
@@ -145,8 +148,9 @@ class TestQuestionAndAnswerTool(unittest.TestCase):
 
         vector_store = Vectorstore(embedding_model=mock_embedding_model)
         vector_store.vector_store = True
+        # Add a document chunk with required metadata including chunk_id
         vector_store.documents["test_doc"] = Document(
-            page_content="Test content", metadata={"paper_id": "test_paper"}
+            page_content="Test content", metadata={"paper_id": "test_paper", "chunk_id": 0}
         )
 
         results = vector_store.retrieve_relevant_chunks(query="test query")
@@ -793,8 +797,9 @@ class TestMissingState(unittest.TestCase):
 
         vector_store = Vectorstore(embedding_model=mock_embedding_model)
         vector_store.vector_store = True
-        doc1 = Document(page_content="Doc 1", metadata={"paper_id": "paper1"})
-        doc2 = Document(page_content="Doc 2", metadata={"paper_id": "paper2"})
+        # Add document chunks with necessary metadata including chunk_ids
+        doc1 = Document(page_content="Doc 1", metadata={"paper_id": "paper1", "chunk_id": 0})
+        doc2 = Document(page_content="Doc 2", metadata={"paper_id": "paper2", "chunk_id": 1})
         vector_store.documents = {"doc1": doc1, "doc2": doc2}
 
         results = vector_store.retrieve_relevant_chunks(
@@ -820,3 +825,54 @@ class TestMissingState(unittest.TestCase):
             query="test", paper_ids=["nonexistent_id"]
         )
         assert results == []
+
+    @patch(
+        "aiagents4pharma.talk2scholars.tools.pdf.question_and_answer.load_hydra_config"
+    )
+    @patch(
+        "aiagents4pharma.talk2scholars.tools.pdf.question_and_answer.generate_answer"
+    )
+    def test_prebuilt_vector_store_branch(self, mock_generate, mock_load_config):
+        """Test question_and_answer tool with a shared pre-built vector store branch."""
+        # Mock configuration for tool-level thresholds
+        config = SimpleNamespace(top_k_papers=1, top_k_chunks=1)
+        mock_load_config.return_value = config
+        # Mock generate_answer to return a simple response
+        mock_generate.return_value = {"output_text": "Answer", "papers_used": ["p1"]}
+
+        # Prepare a dummy pre-built vector store
+        dummy_vs = SimpleNamespace(
+            loaded_papers=set(),
+            vector_store=True,
+            retrieve_relevant_chunks=lambda *_args, **_kwargs: [
+                Document(page_content="chunk", metadata={"paper_id": "p1"})
+            ],
+        )
+        # Override the module-level prebuilt_vector_store
+        qa_module.prebuilt_vector_store = dummy_vs
+
+        # Prepare state with required models and article_data
+        state = {
+            "text_embedding_model": MagicMock(),
+            "llm_model": MagicMock(),
+            "article_data": {"p1": {"source": "upload"}},
+        }
+
+        # Invoke the tool-level function via .run with appropriate input schema
+        input_data = {
+            "question": "What?",
+            "paper_ids": None,
+            "use_all_papers": False,
+            "tool_call_id": "testid",
+            "state": state,
+        }
+        result = qa_module.question_and_answer.run(input_data)
+
+        # Ensure the prebuilt branch was used and a Command is returned
+        self.assertTrue(hasattr(result, "update"))
+        messages = result.update.get("messages", [])
+        self.assertEqual(len(messages), 1)
+        self.assertIsInstance(messages[0], ToolMessage)
+
+        # Clean up global override
+        qa_module.prebuilt_vector_store = None
