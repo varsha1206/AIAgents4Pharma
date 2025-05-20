@@ -106,7 +106,7 @@ def extract_metadata(root: ET.Element, pmc_id: str, pdf_download_url: str) -> di
     }
 
 
-@tool(args_schema=DownloadPubMedXInput, parse_docstring=True)
+#@tool(args_schema=DownloadPubMedXInput, parse_docstring=True)
 def download_pubmedx_paper(
     pmc_id: str,
     tool_call_id: Annotated[str, InjectedToolCallId],
