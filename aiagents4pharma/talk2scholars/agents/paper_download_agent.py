@@ -59,7 +59,7 @@ def get_app(uniq_id, llm_model: BaseChatModel):
 
     def paper_download_agent_node(state: Talk2Scholars) -> Dict[str, Any]:
         """
-        Processes the current state to fetch the arXiv paper.
+        Processes the current state to fetch the arXiv paper and pubmed paper.
         """
         logger.info("Creating paper download agent node with thread_id: %s", uniq_id)
         result = model.invoke(state, {"configurable": {"thread_id": uniq_id}})

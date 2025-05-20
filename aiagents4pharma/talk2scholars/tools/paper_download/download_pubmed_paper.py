@@ -119,12 +119,13 @@ def download_pubmedx_paper(
     metadata_url,pdf_download_url,map_url = get_pubmedx_config()
 
     #Mapping given id to pmc_id
-    if pmc_id.startswith("PMC"):
+    if pmc_id.lower().startswith("pmc"):
         pass
     else:
         pmc_id = map_ids(pmc_id,map_url)
     # Extract metadata
-    metadata = extract_metadata(fetch_metadata(metadata_url,pmc_id),pmc_id,pdf_download_url)
+    raw_data = fetch_metadata(metadata_url,pmc_id)
+    metadata = extract_metadata(raw_data,pmc_id,pdf_download_url)
 
     # Create article_data entry with the paper ID as the key
     article_data = {pmc_id: metadata}
