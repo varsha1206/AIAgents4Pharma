@@ -141,6 +141,7 @@ class SearchData:
                 f"{i+1}. {paper['Title']} ({paper['Year']}; "
                 f"semantic_scholar_paper_id: {paper['semantic_scholar_paper_id']}; "
                 f"arXiv ID: {paper['arxiv_id']})"
+                f"PMC ID: {paper['pmc_id']})"
                 for i, paper in enumerate(top_papers)
             ]
         )
