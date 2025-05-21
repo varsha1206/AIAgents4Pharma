@@ -13,8 +13,7 @@ from langgraph.prebuilt.chat_agent_executor import create_react_agent
 from langgraph.prebuilt.tool_node import ToolNode
 from langgraph.checkpoint.memory import MemorySaver
 from ..state.state_talk2scholars import Talk2Scholars
-from ..tools.paper_download.download_arxiv_input import download_arxiv_paper
-from ..tools.paper_download.download_pubmed_paper import download_pubmedx_paper
+from ..tools.paper_download.download_tool import download_paper
 
 # Initialize logger
 logging.basicConfig(level=logging.INFO)
@@ -32,7 +31,7 @@ def get_app(uniq_id, llm_model: BaseChatModel):
 
     Returns:
         StateGraph: A compiled LangGraph application that enables the paper download agent to
-            process user queries and retrieve arXiv papers and pubmed papers.
+            process user queries and retrieve papers from various sources.
     """
 
     # Load Hydra configuration
@@ -45,7 +44,7 @@ def get_app(uniq_id, llm_model: BaseChatModel):
         cfg = cfg.agents.talk2scholars.paper_download_agent
 
     # Define tools properly
-    tools = ToolNode([download_arxiv_paper,download_pubmedx_paper])
+    tools = ToolNode([download_paper])
 
     # Define the model
     logger.info("Using OpenAI model %s", llm_model)
