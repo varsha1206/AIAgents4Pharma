@@ -143,7 +143,7 @@ class MultiPaperRecData:
                 ],
                 "URL": paper.get("url", "N/A"),
                 "arxiv_id": paper.get("externalIds", {}).get("ArXiv", "N/A"),
-                "pmc_id": paper.get("externalIds", {}).get("PubMedCentral", "N/A"),
+                "pmc_id": "PMC"+paper.get("externalIds", {}).get("PubMedCentral", "N/A"),
                 "pm_id": paper.get("externalIds",{}).get("PubMed","N/A")
             }
             for paper in self.recommendations
