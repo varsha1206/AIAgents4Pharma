@@ -11,15 +11,11 @@ import re
 
 from .retrievers.download_arxiv_input import ArxivRetriever
 from .retrievers.download_pubmed_paper import PubMedRetriever
+from .utils.arxiv_utils import is_arxiv_id
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-def is_arxiv_id(paper_id: str) -> bool:
-    modern_pattern = r"^\d{4}\.\d{4,5}(v\d+)?$"
-    legacy_pattern = r"^[a-z\-]+\/\d{7}(v\d+)?$"
-    return re.match(modern_pattern, paper_id) or re.match(legacy_pattern, paper_id)
 
 class DownloadPaperInput(BaseModel):
     source: Union[Literal["arxiv", "pubmed"]] = Field(

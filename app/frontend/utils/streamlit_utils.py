@@ -740,6 +740,7 @@ def get_response(agent, graphs_visuals, app, st, prompt):
                 "source",
                 "filename",
                 "pdf_url",
+                "pmc_id",
                 "attachment_key",
             ]
 

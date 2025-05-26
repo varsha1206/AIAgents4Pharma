@@ -16,8 +16,8 @@ def map_ids(input_id: str, map_url: str) -> str:
     if ((record := root.find("record")) is not None and record.attrib.get("pmcid")):
         logger.info("Retrieved PMC ID for the given id %s", input_id)
         return record.attrib["pmcid"]
-    #raise RuntimeError(f"PMC id not found for {input_id}")
     return "PMC"+input_id
+
 def fetch_pubmed_metadata(url: str, paper_id: str) -> ET.Element:
     """Fetch and parse metadata from the API url"""
     response = requests.get(
@@ -31,19 +31,19 @@ def fetch_pubmed_metadata(url: str, paper_id: str) -> ET.Element:
 def extract_pubmed_metadata(xml_root: ET.Element, paper_id: str, pdf_base_url: str) -> dict:
     """Extract metadata from the XML entry."""
     title_elem = xml_root.find(".//article-title")
-    title = title_elem.text if title_elem is not None else "N/A"
+    title = title_elem.text if title_elem is not None else ""
 
     abstract_elem = xml_root.find(".//abstract")
-    abstract = "".join(abstract_elem.itertext()).strip() if abstract_elem is not None else "N/A"
+    abstract = "".join(abstract_elem.itertext()).strip() if abstract_elem is not None else ""
 
     authors = ", ".join(
         f"{name.findtext('given-names', default='')} {name.findtext('surname', default='')}".strip()
         for contrib in xml_root.findall('.//contrib[@contrib-type="author"]')
         if (name := contrib.find("name")) is not None
-    ) or "N/A"
+    ) or ""
 
     pub_date_elem = xml_root.find(".//published")
-    pub_date = pub_date_elem.text.strip() if pub_date_elem is not None else "N/A"
+    pub_date = pub_date_elem.text.strip() if pub_date_elem is not None else ""
 
     pdf_url = f"{pdf_base_url}{paper_id}?pdf=render"
     if requests.get(pdf_url, timeout=10).status_code != 200:

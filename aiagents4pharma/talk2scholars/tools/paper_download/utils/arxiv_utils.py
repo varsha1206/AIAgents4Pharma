@@ -3,6 +3,7 @@
 Arxiv Utility functions to fetch and extract metadata.
 """
 import requests
+import re
 import xml.etree.ElementTree as ET
 import logging
 
@@ -56,3 +57,8 @@ def extract_arxiv_metadata(entry: ET.Element, ns: dict, arxiv_id: str) -> dict:
         "source": "arxiv",
         "arxiv_id": arxiv_id,
     }
+
+def is_arxiv_id(paper_id: str) -> bool:
+    modern_pattern = r"^\d{4}\.\d{4,5}(v\d+)?$"
+    legacy_pattern = r"^[a-z\-]+\/\d{7}(v\d+)?$"
+    return re.match(modern_pattern, paper_id) or re.match(legacy_pattern, paper_id)
