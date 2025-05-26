@@ -71,22 +71,22 @@ def fetch_metadata(
 def extract_metadata(root: ET.Element, pmc_id: str, pdf_download_url: str) -> dict:
     """Extract metadata for the PMC ID."""
     title_elem = root.find('.//article-title')
-    title = title_elem.text if title_elem is not None else "N/A"
+    title = title_elem.text if title_elem is not None else ""
 
     # Abstract
     abstract_elem = root.find('.//abstract')
-    abstract = ''.join(abstract_elem.itertext()).strip() if abstract_elem is not None else "N/A"
+    abstract = ''.join(abstract_elem.itertext()).strip() if abstract_elem is not None else ""
 
     # Authors
     authors = ', '.join(
         f"{name.findtext('given-names', default='')} {name.findtext('surname', default='')}".strip()
         for contrib in root.findall('.//contrib[@contrib-type="author"]')
         if (name := contrib.find('name')) is not None
-    ) or "N/A"
+    ) or ""
 
     # Publication Data
     pub_date_elem = root.find('.//published')
-    pub_date = pub_date_elem.text.strip() if pub_date_elem is not None else "N/A"
+    pub_date = pub_date_elem.text.strip() if pub_date_elem is not None else ""
 
     pdf_url = f"{pdf_download_url}{pmc_id}?pdf=render"
     if requests.get(pdf_url,timeout=10).status_code != 200:
