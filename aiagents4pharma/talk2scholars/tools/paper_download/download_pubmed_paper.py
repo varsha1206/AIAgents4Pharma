@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def get_pubmedx_config():
+def get_pubmed_config():
     """Fetching Hydra configurations"""
     logger.info("Loading Hydra Configs:")
     with hydra.initialize(version_base=None, config_path="../../configs"):
@@ -31,7 +31,7 @@ def get_pubmedx_config():
             cfg.tools.download_pubmed_paper.pdf_base_url,
             cfg.tools.download_pubmed_paper.map_url
         )
-class DownloadPubMedXInput(BaseModel):
+class DownloadPubMedInput(BaseModel):
     """Input schema for the pubmedx paper download tool."""
 
     pmc_id: str = Field(
@@ -106,17 +106,17 @@ def extract_metadata(root: ET.Element, pmc_id: str, pdf_download_url: str) -> di
     }
 
 
-@tool(args_schema=DownloadPubMedXInput, parse_docstring=True)
-def download_pubmedx_paper(
+@tool(args_schema=DownloadPubMedInput, parse_docstring=True)
+def download_pubmed_paper(
     pmc_id: str,
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> Command[Any]:
     """
-    Get metadata and PDF URL for an PubMedX paper using unique DOI.
+    Get metadata and PDF URL for an PubMed paper using unique ID.
     """
-    logger.info("Fetching metadata from PubMedx for paper PMC ID: %s", pmc_id)
+    logger.info("Fetching metadata from PubMed for paper PMC ID: %s", pmc_id)
 
-    metadata_url,pdf_download_url,map_url = get_pubmedx_config()
+    metadata_url,pdf_download_url,map_url = get_pubmed_config()
 
     #Mapping given id to pmc_id
     if pmc_id.lower().startswith("pmc"):

@@ -1,6 +1,6 @@
 """
 Unit tests for pubmed paper downloading functionality, including:
-- download_pubmedx_paper tool function.
+- download_pubmed_paper tool function.
 """
 
 import unittest
@@ -8,11 +8,11 @@ from unittest.mock import MagicMock, patch
 
 from langchain_core.messages import ToolMessage
 from aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper import (
-    download_pubmedx_paper,
+    download_pubmed_paper,
 )
 
-class TestDownloadPubMedXPaper(unittest.TestCase):
-    """Tests for the download_pubmedx_paper tool."""
+class TestDownloadPubMedPaper(unittest.TestCase):
+    """Tests for the download_pubmed_paper tool."""
     @patch(
     "aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper.hydra.initialize"
 )
@@ -22,7 +22,7 @@ class TestDownloadPubMedXPaper(unittest.TestCase):
     @patch(
     "aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper.requests.get"
     )
-    def test_download_pubmedx_paper_success(self, mock_get, mock_compose, mock_initialize):
+    def test_download_pubmed_paper_success(self, mock_get, mock_compose, mock_initialize):
         """Test successful retrieval of metadata and PDF URL."""
         # Dummy config
         dummy_cfg = MagicMock()
@@ -69,7 +69,7 @@ class TestDownloadPubMedXPaper(unittest.TestCase):
 
         tool_call_id = "test_tool_id"
         tool_input = {"pmc_id": pmc_id, "tool_call_id": tool_call_id}
-        result = download_pubmedx_paper.run(tool_input)
+        result = download_pubmed_paper.run(tool_input)
         update = result.update
 
         self.assertIn("article_data", update)
@@ -94,7 +94,7 @@ class TestDownloadPubMedXPaper(unittest.TestCase):
     @patch(
     "aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper.requests.get"
     )
-    def test_download_pubmedx_paper_empty_metadata(self, mock_get, mock_compose, mock_initialize):
+    def test_download_pubmed_paper_empty_metadata(self, mock_get, mock_compose, mock_initialize):
         """Test case where the XML contains no article metadata."""
         dummy_cfg = MagicMock()
         dummy_cfg.tools.download_pubmed_paper.metadata_url = "http://dummy.pubmed.org/api"
@@ -118,7 +118,7 @@ class TestDownloadPubMedXPaper(unittest.TestCase):
         tool_call_id = "test_tool_id"
         tool_input = {"pmc_id": pmc_id, "tool_call_id": tool_call_id}
 
-        result = download_pubmedx_paper.run(tool_input)
+        result = download_pubmed_paper.run(tool_input)
         update = result.update
         metadata = update["article_data"][pmc_id]
 
@@ -171,7 +171,7 @@ class TestDownloadPubMedXPaper(unittest.TestCase):
         tool_input = {"pmc_id": pmc_id, "tool_call_id": tool_call_id}
 
         with self.assertRaises(RuntimeError) as context:
-            download_pubmedx_paper.run(tool_input)
+            download_pubmed_paper.run(tool_input)
 
         self.assertIn("No PDF found or access denied", str(context.exception))
 
@@ -243,7 +243,7 @@ class TestDownloadPubMedXPaper(unittest.TestCase):
             dummy_pdf_response           # PDF check
         ]
 
-        result = download_pubmedx_paper.run(
+        result = download_pubmed_paper.run(
             {"pmc_id": non_pmc_input_id,
             "tool_call_id": "mock_tool_id"}
         )
@@ -267,7 +267,7 @@ class TestDownloadPubMedXPaper(unittest.TestCase):
         mock_get.side_effect = [failed_map_response]
 
         with self.assertRaises(RuntimeError) as context:
-            download_pubmedx_paper.run(
+            download_pubmed_paper.run(
                 {"pmc_id": "10.1000/unknown-doi",
                 "tool_call_id": "mock_tool_id"}
             )
