@@ -117,7 +117,7 @@ def download_pubmed_paper(
     logger.info("Fetching metadata from PubMed for paper PMC ID: %s", pmc_id)
 
     metadata_url,pdf_download_url,map_url = get_pubmed_config()
-
+    given_id=pmc_id
     #Mapping given id to pmc_id
     if pmc_id.lower().startswith("pmc"):
         pass
@@ -128,7 +128,7 @@ def download_pubmed_paper(
     metadata = extract_metadata(raw_data,pmc_id,pdf_download_url)
 
     # Create article_data entry with the paper ID as the key
-    article_data = {pmc_id: metadata}
+    article_data = {given_id: metadata}
     content = f"Successfully retrieved metadata for PMC ID {pmc_id}"
 
     return Command(
