@@ -74,6 +74,7 @@ class Talk2Scholars(AgentState):
     Attributes:
         last_displayed_papers (Dict[str, Any]): Stores the most recently displayed papers.
         papers (Dict[str, Any]): Stores the research papers retrieved from the agent's queries.
+        paper_download_status (Dict[str, Any]): Stores the status of download for paper.
         multi_papers (Dict[str, Any]): Stores multiple recommended papers from various sources.
         article_data (Dict[str, Any]): Stores the papers retrieved from Zotero and the pdf
         download agent with their metadata.
@@ -90,6 +91,7 @@ class Talk2Scholars(AgentState):
     last_displayed_papers: Annotated[Dict[str, Any], replace_dict]
     # Accumulative keys: merge new entries into existing state
     papers: Annotated[Dict[str, Any], merge_dict]
+    paper_download_status: Annotated[Dict[str, Any], replace_dict]
     multi_papers: Annotated[Dict[str, Any], merge_dict]
     article_data: Annotated[Dict[str, Any], merge_dict]
     # Approval status: always replace to reflect latest operation

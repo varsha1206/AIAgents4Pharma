@@ -62,16 +62,19 @@ class PubMedRetriever(BasePaperRetriever):
         Get metadata and PDF URL for an pubmed paper using its unique PMC ID.
         """
         self.load_hydra_configs()
+        ids = paper_id
         paper_id = map_ids(paper_id, self.map_url)
 
         xml_root = self.fetch_metadata(self.metadata_url, paper_id)
         metadata = self.extract_metadata(xml_root, paper_id)
         logger.info("Metadata successfully extracted for paper %s",paper_id)
 
-        article_data = {paper_id: metadata}
+        article_data = {ids: metadata}
         content = f"Successfully retrieved metadata and PDF URL for PMC ID {paper_id}"
+        status = {ids: {"paper_download _status":"success","source":"pubmed"}}
         return Command(
             update={
+                "paper_download_status": status,
                 "article_data": article_data,
                 "messages": [ToolMessage(content, tool_call_id=tool_call_id)],
             }

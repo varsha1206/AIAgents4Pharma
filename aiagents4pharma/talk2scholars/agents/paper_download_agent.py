@@ -45,7 +45,6 @@ def get_app(uniq_id, llm_model: BaseChatModel):
 
     # Define tools properly
     tools = ToolNode([download_paper])
-
     # Define the model
     logger.info("Using OpenAI model %s", llm_model)
     model = create_react_agent(
@@ -60,9 +59,27 @@ def get_app(uniq_id, llm_model: BaseChatModel):
         """
         Processes the current state to fetch the arXiv paper and pubmed paper.
         """
-        logger.info("Creating paper download agent node with thread_id: %s", uniq_id)
-        result = model.invoke(state, {"configurable": {"thread_id": uniq_id}})
-        return result
+        print("here inside paper download agent")
+        print(f"Current paper_download_status: {state.get('paper_download_status', {})}")
+        paper_status_dict = state.get("paper_download_status", {})
+        if not paper_status_dict:
+            print("Calling tool for paper cuz dict empty:")
+            result = model.invoke(state, {"configurable": {"thread_id": uniq_id}})
+            print("call executed")
+            return result
+        for paper_id, info in paper_status_dict.items():
+            logger.info(f"Checking status for paper: {paper_id} -> {info}")
+            status = info.get("paper_download_status", "pending")
+
+            if status == "success":
+                logger.info(f"Paper {paper_id} already downloaded, skipping.")
+                continue
+
+            # Trigger the download process
+            logger.info(f"Downloading paper {paper_id} with thread_id: {uniq_id}")
+            print("Calling tool for paper:", paper_id)
+            result = model.invoke(state, {"configurable": {"thread_id": uniq_id}})
+            return result
 
     # Define new graph
     workflow = StateGraph(Talk2Scholars)

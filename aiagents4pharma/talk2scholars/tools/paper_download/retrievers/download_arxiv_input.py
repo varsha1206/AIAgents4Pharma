@@ -80,9 +80,10 @@ class ArxivRetriever(BasePaperRetriever):
 
         article_data = {paper_id: metadata}
         content = f"Successfully retrieved metadata and PDF URL for arXiv ID {paper_id}"
-
+        status = {paper_id: {"paper_download _status":"success","source":"arxiv"}}
         return Command(
             update={
+                "paper_download_status": status,
                 "article_data": article_data,
                 "messages": [ToolMessage(content=content, tool_call_id=tool_call_id)],
             }
