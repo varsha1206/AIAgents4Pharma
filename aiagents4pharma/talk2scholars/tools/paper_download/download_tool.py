@@ -25,7 +25,7 @@ class DownloadPaperInput(BaseModel):
     paper_id: str = Field(description="The ID of the paper (e.g., arXiv ID, PMC ID)")
     tool_call_id: Annotated[str, InjectedToolCallId]
 
-@tool(args_schema=DownloadPaperInput)
+@tool(args_schema=DownloadPaperInput, return_direct=True)
 def download_paper(paper_id: str, source: str, tool_call_id: Annotated[str, InjectedToolCallId]):
     """
     Download a paper given its ID and source (e.g., arXiv or PubMed).
