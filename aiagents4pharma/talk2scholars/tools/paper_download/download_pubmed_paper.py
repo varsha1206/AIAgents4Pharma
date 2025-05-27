@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Tool for downloading PubMedX paper metadata and retrieving the PDF URL.
+Tool for downloading PubMed paper metadata and retrieving the PDF URL.
 """
 
 import logging
@@ -32,7 +32,7 @@ def get_pubmed_config():
             cfg.tools.download_pubmed_paper.map_url
         )
 class DownloadPubMedInput(BaseModel):
-    """Input schema for the pubmedx paper download tool."""
+    """Input schema for the pubmed paper download tool."""
 
     pmc_id: str = Field(
         description="The PMC ID used to retrieve the paper details and PDF URL."
@@ -92,7 +92,7 @@ def extract_metadata(root: ET.Element, pmc_id: str, pdf_download_url: str) -> di
     if requests.get(pdf_url,timeout=10).status_code != 200:
         raise RuntimeError(f"No PDF found or access denied at {pdf_url}")
 
-    logger.info("Metadata from PubMedx for paper PMC ID: %s", pmc_id)
+    logger.info("Metadata from PubMed for paper PMC ID: %s", pmc_id)
     return {
         "Title": title,
         "Authors": authors,

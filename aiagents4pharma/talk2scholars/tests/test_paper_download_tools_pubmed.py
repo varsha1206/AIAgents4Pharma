@@ -40,7 +40,7 @@ class TestDownloadPubMedPaper(unittest.TestCase):
             <front>
                 <article-meta>
                     <title-group>
-                        <article-title>Sample PubMedX Title</article-title>
+                        <article-title>Sample PubMed Title</article-title>
                     </title-group>
                     <abstract>This is a sample abstract.</abstract>
                     <contrib-group>
@@ -75,7 +75,7 @@ class TestDownloadPubMedPaper(unittest.TestCase):
         self.assertIn("article_data", update)
         self.assertIn(pmc_id, update["article_data"])
         metadata = update["article_data"][pmc_id]
-        self.assertEqual(metadata["Title"], "Sample PubMedX Title")
+        self.assertEqual(metadata["Title"], "Sample PubMed Title")
         self.assertIn("John Doe", metadata["Authors"])
         self.assertEqual(metadata["Abstract"], "This is a sample abstract.")
         self.assertEqual(metadata["URL"], f"http://dummy.pubmed.org/pdf/{pmc_id}?pdf=render")
@@ -122,10 +122,10 @@ class TestDownloadPubMedPaper(unittest.TestCase):
         update = result.update
         metadata = update["article_data"][pmc_id]
 
-        self.assertEqual(metadata["Title"], "N/A")
-        self.assertEqual(metadata["Authors"], "N/A")
-        self.assertEqual(metadata["Abstract"], "N/A")
-        self.assertEqual(metadata["Publication Date"], "N/A")
+        self.assertEqual(metadata["Title"], "")
+        self.assertEqual(metadata["Authors"], "")
+        self.assertEqual(metadata["Abstract"], "")
+        self.assertEqual(metadata["Publication Date"], "")
         self.assertEqual(metadata["pdf_url"], f"http://dummy.pubmed.org/pdf/{pmc_id}?pdf=render")
 
     @patch(
@@ -152,7 +152,7 @@ class TestDownloadPubMedPaper(unittest.TestCase):
             <front>
                 <article-meta>
                     <title-group>
-                        <article-title>Sample PubMedX Title</article-title>
+                        <article-title>Sample PubMed Title</article-title>
                     </title-group>
                 </article-meta>
             </front>
@@ -252,7 +252,7 @@ class TestDownloadPubMedPaper(unittest.TestCase):
         self.assertEqual(metadata["Title"], "Mapped Paper Title")
         self.assertEqual(metadata["Abstract"], "Mapped abstract here")
         self.assertIn("Jane Smith", metadata["Authors"])
-        self.assertEqual(metadata["Publication Date"], "N/A")
+        self.assertEqual(metadata["Publication Date"], "")
         self.assertTrue(metadata["URL"].startswith("http://dummy.pubmed.org/pdf/PMC123456"))
 
         # --- CASE 2: Mapping fails — test RuntimeError ---
