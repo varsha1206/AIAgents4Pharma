@@ -54,8 +54,14 @@ def get_app(uniq_id, llm_model: BaseChatModel):
         cfg = cfg.agents.talk2scholars.paper_download_agent
 
     # Define tools properly
-    tools = ToolNode([download_arxiv_paper,download_pubmedx_paper])
-    tools = ToolNode([download_arxiv_paper, download_medrxiv_paper, download_biorxiv_paper])
+    tools = ToolNode(
+        [
+            download_arxiv_paper,
+            download_pubmedx_paper,
+            download_medrxiv_paper,
+            download_biorxiv_paper,
+        ]
+    )
 
     # Define the model
     logger.info("Using OpenAI model %s", llm_model)
@@ -69,8 +75,7 @@ def get_app(uniq_id, llm_model: BaseChatModel):
 
     def paper_download_agent_node(state: Talk2Scholars) -> Dict[str, Any]:
         """
-        Processes the current state to fetch the arXiv paper and pubmed paper.
-        Processes the current state to fetch the research paper from arXiv, BioRxiv, or MedRxiv.
+        Processes the current state to fetch the research paper from arXiv, pubmed, BioRxiv, or MedRxiv.
         """
         logger.info("Creating paper download agent node with thread_id: %s", uniq_id)
         result = model.invoke(state, {"configurable": {"thread_id": uniq_id}})
