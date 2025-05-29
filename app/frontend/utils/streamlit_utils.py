@@ -4,28 +4,30 @@
 Utils for Streamlit.
 """
 
-import os
 import datetime
-import hydra
+import os
+import pickle
 import tempfile
-import streamlit as st
-import streamlit.components.v1 as components
+
+import gravis
+import hydra
+import networkx as nx
 import numpy as np
 import pandas as pd
 import plotly.express as px
-from langsmith import Client
+import streamlit as st
+import streamlit.components.v1 as components
+from langchain.callbacks.tracers import LangChainTracer
+from langchain_core.embeddings import Embeddings
+from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import AIMessage, AIMessageChunk, ChatMessage, HumanMessage
+from langchain_core.tracers.context import collect_runs
+from langchain_nvidia_ai_endpoints import ChatNVIDIA, NVIDIAEmbeddings
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
-from langchain_nvidia_ai_endpoints import ChatNVIDIA, NVIDIAEmbeddings
 from langchain_openai.embeddings import OpenAIEmbeddings
-from langchain_core.language_models import BaseChatModel
-from langchain_core.embeddings import Embeddings
-from langchain_core.messages import AIMessageChunk, HumanMessage, ChatMessage, AIMessage
-from langchain_core.tracers.context import collect_runs
-from langchain.callbacks.tracers import LangChainTracer
-import networkx as nx
-import gravis
-import pickle
+from langsmith import Client
+
 
 def submit_feedback(user_response):
     """
@@ -209,11 +211,12 @@ def sample_questions_t2s():
     Function to get the sample questions for Talk2Scholars.
     """
     questions = [
-        "Search articles on 'Role of DNA damage response (DDR) in Cancer'",
+        "Find articles on 'Bridging Biomedical Foundation Models via Knowledge Graphs'.",
         "Tell me more about the first article in the last search results",
         "Save these articles in my Zotero library under the collection 'Curiosity'",
-        "Download the article 'BioBridge' with arxiv_id '2310.03320' and summarize it",
-        "First, show all the papers in my Zotero library. Then, for each paper, list the PDB IDs of the 3D structures of the GPCRs used in the PDFs.",
+        "Download the last displayed articles and summarize the pre-trained foundation models used in the articles.",
+        "Show all the papers in my Zotero library.",
+        "Describe the PDB IDs of the GPCR 3D structures used in all the PDFs, and explain how the embeddings of the GPCR sequences were generated.",
     ]
     return questions
 
@@ -689,7 +692,11 @@ def get_response(agent, graphs_visuals, app, st, prompt):
             columns_to_drop = [
                 "Abstract",
                 "Key",
+                "paper_ids",
                 "arxiv_id",
+                "pm_id",
+                "pmc_id",
+                "doi",
                 "semantic_scholar_paper_id",
                 "source",
                 "filename",
@@ -1031,6 +1038,7 @@ def initialize_selections() -> None:
         selections[i] = []
 
     return selections
+
 
 @st.fragment
 def get_uploaded_files(cfg: hydra.core.config_store.ConfigStore) -> None:
