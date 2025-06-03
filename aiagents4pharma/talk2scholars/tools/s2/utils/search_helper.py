@@ -120,12 +120,12 @@ class SearchData:
             arxiv = ext.get("ArXiv")
             if arxiv:
                 ids.append(f"arxiv:{arxiv}")
-            pubmed = ext.get("PubMed")
-            if pubmed:
-                ids.append(f"pubmed:{pubmed}")
-            pmc = ext.get("PubMedCentral")
-            if pmc:
-                ids.append(f"pmc:{pmc}")
+            # pubmed = ext.get("PubMed")
+            # if pubmed:
+            #     ids.append(f"pubmed:{pubmed}")
+            # pmc = ext.get("PubMedCentral")
+            # if pmc:
+            #     ids.append(f"pmc:{pmc}")
             doi_id = ext.get("DOI")
             if doi_id:
                 ids.append(f"doi:{doi_id}")
@@ -145,8 +145,8 @@ class SearchData:
                 ],
                 "URL": paper.get("url", "N/A"),
                 "arxiv_id": arxiv or "N/A",
-                "pmc_id": pmc or "N/A",
-                "pm_id": pubmed or "N/A",
+                # "pmc_id": pmc or "N/A",
+                # "pm_id": pubmed or "N/A",
                 "doi": doi_id or "N/A",
                 "paper_ids": ids,
                 "source": "semantic_scholar",
