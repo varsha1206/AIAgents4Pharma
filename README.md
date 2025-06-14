@@ -254,7 +254,8 @@ git push origin feat/your-feature-name
 
 #### Contacts for contributions
 
-- **Talk2Biomodels / Talk2Cells**: [@lilijap](https://github.com/lilijap), [@gurdeep330](https://github.com/gurdeep330)
+- **Talk2Biomodels**: [@lilijap](https://github.com/lilijap), [@gurdeep330](https://github.com/gurdeep330)
+- **Talk2Cells**: [@gurdeep330](https://github.com/gurdeep330)
 - **Talk2KnowledgeGraphs**: [@awmulyadi](https://github.com/awmulyadi)
 - **Talk2Scholars**: [@ansh-info](https://github.com/ansh-info), [@gurdeep330](https://github.com/gurdeep330)
 
