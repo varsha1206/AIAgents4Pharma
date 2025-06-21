@@ -24,7 +24,7 @@ class BasePaperRetriever(ABC):
         pass
 
     @abstractmethod
-    def fetch_metadata(self,url: str, paper_id: str) -> ET.Element:
+    def fetch_metadata(self,url: str, paper_id: str) -> dict:
         """
         Fetch metadata from the given URL using the paper ID.
 
@@ -33,17 +33,17 @@ class BasePaperRetriever(ABC):
             paper_id (str): The unique identifier for the paper.
 
         Returns:
-            ET.Element: Parsed XML metadata root.
+            dict: Dictionary containing the metadata.
         """
         pass
 
     @abstractmethod
-    def extract_metadata(self,xml_root: ET.Element, paper_id: str) -> dict:
+    def extract_metadata(self,data: dict, paper_id: str) -> dict:
         """
         Extract the metadata fields from the XML root.
 
         Args:
-            xml_root (ET.Element): The parsed XML element.
+            data (dict): The data from fetch_metadata.
             paper_id (str): The ID of the paper.
 
         Returns:

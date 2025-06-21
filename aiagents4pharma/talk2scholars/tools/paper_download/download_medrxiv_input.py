@@ -39,7 +39,7 @@ class DownloadMedrxivPaperInput(BasePaperRetriever):
     
     def fetch_metadata(
             self, url: str, paper_id: str
-            ) -> ET.Element:
+            ) -> dict:
         """
         Fetch metadata for a MedRxiv paper using its DOI and extract relevant fields.
         
@@ -56,29 +56,19 @@ class DownloadMedrxivPaperInput(BasePaperRetriever):
         logger.info("Fetching metadata from api url: %s", api_url)
         response = requests.get(api_url, timeout=self.request_timeout)
         response.raise_for_status()
-        return ET.fromstring(response.text)
+        information = response.json()
+        return information["collection"][0]
     
-    def extract_metadata(self,xml_root: ET.Element,paper_id: str) -> dict:
+    def extract_metadata(self,data: dict,paper_id: str) -> dict:
         """
         Extract relevant metadata fields from a MedRxiv paper entry.
         """
-        title_elem = xml_root.find("atom:title", self.ns)
-        title = (title_elem.text or "").strip() if title_elem is not None else "N/A"
-
-        authors = []
-        for author_elem in xml_root.findall("atom:authors", self.ns):
-            name_elem = author_elem.find("atom:name", self.ns)
-            if name_elem is not None and name_elem.text:
-                authors.append(name_elem.text.strip())
-
-        summary_elem = xml_root.find("atom:abstract", self.ns)
-        abstract = (summary_elem.text or "").strip() if summary_elem is not None else "N/A"
-        published_elem = xml_root.find("atom:date", self.ns)
-        pub_date = (
-            (published_elem.text or "").strip() if published_elem is not None else "N/A"
-        )
-        doi_elem = xml_root.find("atom:doi", self.ns)
-        doi_suffix = doi_elem.text.split("10.1101/")[-1]
+        logger.info("Extracting metadata for %s",paper_id)
+        title = data.get("title", "")
+        authors = data.get("authors", "")
+        abstract = data.get("abstract", "")
+        pub_date = data.get("date", "")
+        doi_suffix = data.get("doi", "").split("10.1101/")[-1]
         pdf_url = f"https://www.medrxiv.org/content/10.1101/{doi_suffix}.full.pdf"
         logger.info("PDF URL: %s", pdf_url)
         if not pdf_url:
@@ -147,16 +137,15 @@ class DownloadMedrxivPaperInput(BasePaperRetriever):
         # Aggregate results
         article_data: dict[str, Any] = {}
         for doi in paper_ids:
+            doi = doi.split(":")[1]
             logger.info("Processing DOI: %s", doi)
             # Fetch metadata
-            entry = self.fetch_metadata(api_url,doi).find(
-                "atom:entry", self.ns
-            )
+            entry = self.fetch_metadata(api_url,doi)
             if entry is None:
                 logger.warning("No entry found for MedRxiv ID %s", doi)
                 continue
             # Extract relevant metadata
-            article_data = self.extract_metadata(entry, doi)
+            article_data[doi] = self.extract_metadata(entry, doi)
     
         # Build and return summary
         content = self._build_summary(article_data)

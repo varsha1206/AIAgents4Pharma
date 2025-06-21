@@ -37,16 +37,19 @@ class DownloadArxivPaperInput(BasePaperRetriever):
 
     def fetch_metadata(
         self,url: str, paper_id: str
-        ) -> ET.Element:
+        ) -> dict:
         """Fetch and parse metadata from the arXiv API."""
         query_url = f"{url}?search_query=id:{paper_id}&start=0&max_results=1"
         response = requests.get(query_url, timeout=self.request_timeout)
         response.raise_for_status()
-        return ET.fromstring(response.text)
+        return {"data": ET.fromstring(response.text)}
 
 
-    def extract_metadata(self,xml_root: ET.Element,paper_id: str) -> dict:
+    def extract_metadata(self,data: dict,paper_id: str) -> dict:
         """Extract metadata from the XML xml_root."""
+        xml_root = data["data"].find(
+                "atom:entry", self.ns
+            )
         title_elem = xml_root.find("atom:title", self.ns)
         title = (title_elem.text or "").strip() if title_elem is not None else "N/A"
 
@@ -143,9 +146,7 @@ class DownloadArxivPaperInput(BasePaperRetriever):
             aid = aid.split(":")[1]
             logger.info("Processing arXiv ID: %s", aid)
             # Fetch and parse metadata
-            xml_root = self.fetch_metadata(api_url, aid).find(
-                "atom:entry", self.ns
-            )
+            xml_root = self.fetch_metadata(api_url, aid)
             if xml_root is None:
                 logger.warning("No xml_root found for arXiv ID %s", aid)
                 continue

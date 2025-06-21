@@ -25,7 +25,6 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
     """Input schema for the bioRxiv paper download tool."""
  
     def __init__(self):
-        self.ns = {"atom": "http://www.w3.org/2005/Atom"}
         self.request_timeout=None
 
     # Helper to load bioRxiv download configuration
@@ -39,7 +38,7 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
     
     def fetch_metadata(
             self, url: str, paper_id: str
-            ) -> ET.Element:
+            ) -> dict:
         """
         Fetch metadata for a bioRxiv paper using its DOI and extract relevant fields.
         
@@ -47,7 +46,7 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
             doi (str): List of DOIs of the bioRxiv paper.
         
         Returns:
-            dict: A dictionary containing the title, authors, abstract, publication date, and URLs.
+            dict: A dict containing the title, authors, abstract, publication date, and URLs.
         """
         # Strip any version suffix (e.g., v1) since bioRxiv's API is version-sensitive
         clean_doi = paper_id.split("v")[0]
@@ -56,38 +55,24 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
         logger.info("Fetching metadata from api url: %s", a_url)
         response = requests.get(a_url, timeout=self.request_timeout)
         response.raise_for_status()
-        print(response.text)
-        return ET.fromstring(response.text)
+        information = response.json()
+        return information["collection"][0]
     
-    def extract_metadata(self,xml_root: ET.Element,paper_id: str) -> dict:
+    def extract_metadata(self,data: dict,paper_id: str) -> dict:
         """
         Extract relevant metadata fields from a bioRxiv paper entry.
         """
         logger.info("Extracting metadata for %s",paper_id)
-        title_elem = xml_root.find("atom:title", self.ns)
-        title = (title_elem.text or "").strip() if title_elem is not None else "N/A"
-        print("Title done")
-        authors = []
-        for author_elem in xml_root.findall("atom:authors", self.ns):
-            name_elem = author_elem.find("atom:name", self.ns)
-            if name_elem is not None and name_elem.text:
-                authors.append(name_elem.text.strip())
-        print("Authors done")
-        summary_elem = xml_root.find("atom:abstract", self.ns)
-        abstract = (summary_elem.text or "").strip() if summary_elem is not None else "N/A"
-        print("Abstract done")
-        published_elem = xml_root.find("atom:date", self.ns)
-        pub_date = (
-            (published_elem.text or "").strip() if published_elem is not None else "N/A"
-        )
-        print("Date done")
-        doi_elem = xml_root.find("atom:doi", self.ns)
-        doi_suffix = doi_elem.text.split("10.1101/")[-1]
-        print("Date done")
+        title = data.get("title", "")
+        authors = data.get("authors", "")
+        abstract = data.get("abstract", "")
+        pub_date = data.get("date", "")
+        doi_suffix = data.get("doi", "").split("10.1101/")[-1]
         pdf_url = f"https://www.biorxiv.org/content/10.1101/{doi_suffix}.full.pdf"
+        if requests.get(pdf_url,timeout=self.request_timeout).status_code != 200:
+            print(f"No PDF found or access denied at {pdf_url}")
+            raise RuntimeError(f"No PDF found or access denied at {pdf_url}")
         logger.info("PDF URL: %s", pdf_url)
-        if not pdf_url:
-            raise ValueError(f"No PDF URL found for DOI: {paper_id}")
         return {
             "Title": title,
             "Authors": authors,
@@ -152,20 +137,19 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
         # Aggregate results
         article_data: dict[str, Any] = {}
         for doi in paper_ids:
+            doi = doi.split(":")[1]
             logger.info("Processing DOI: %s", doi)
             # Fetch metadata
-            entry = self.fetch_metadata(api_url,doi).find(
-                "atom:entry", self.ns
-            )
-            print("Done fetching metadata")
+            entry = self.fetch_metadata(api_url,doi)
             if entry is None:
                 logger.warning("No entry found for bioRxiv ID %s", doi)
                 continue
             # Extract relevant metadata
-            article_data = self.extract_metadata(entry, doi)
+            article_data[doi] = self.extract_metadata(entry, doi)
     
         # Build and return summary
         content = self._build_summary(article_data)
+        logger.info("Succesfully ran the biorxiv tool")
         return Command(
             update={
                 "article_data": article_data,
