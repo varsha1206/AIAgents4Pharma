@@ -22,11 +22,6 @@ logger = logging.getLogger(__name__)
 class DownloadArxivPaperInput(BasePaperRetriever):
     """Input schema for the arXiv paper download tool."""
 
-    # arxiv_ids: List[str] = Field(
-    #     description="List of arXiv paper IDs used to retrieve paper details and PDF URLs."
-    # )
-    # tool_call_id: Annotated[str, InjectedToolCallId]
-
     def __init__(self):
         self.ns = {"atom": "http://www.w3.org/2005/Atom"}
         self.request_timeout = None
@@ -46,15 +41,12 @@ class DownloadArxivPaperInput(BasePaperRetriever):
         """Fetch and parse metadata from the arXiv API."""
         query_url = f"{url}?search_query=id:{paper_id}&start=0&max_results=1"
         response = requests.get(query_url, timeout=self.request_timeout)
-        print(response.text)
         response.raise_for_status()
-        print("Fetch metadata ended")
         return ET.fromstring(response.text)
 
 
     def extract_metadata(self,xml_root: ET.Element,paper_id: str) -> dict:
         """Extract metadata from the XML xml_root."""
-        print("Extract metadata started")
         title_elem = xml_root.find("atom:title", self.ns)
         title = (title_elem.text or "").strip() if title_elem is not None else "N/A"
 
@@ -82,7 +74,6 @@ class DownloadArxivPaperInput(BasePaperRetriever):
         )
         if not pdf_url:
             raise RuntimeError(f"Could not find PDF URL for arXiv ID {paper_id}")
-        print("Extract metadata ended")
         return {
             "Title": title,
             "Authors": authors,
@@ -131,11 +122,6 @@ class DownloadArxivPaperInput(BasePaperRetriever):
             "Top 3 papers:\n" + summary
         )
 
-
-    # @tool(
-    #     args_schema=DownloadArxivPaperInput,
-    #     parse_docstring=True,
-    # )
     def paper_retriever(
         self,
         paper_ids: List[str],
@@ -160,15 +146,13 @@ class DownloadArxivPaperInput(BasePaperRetriever):
             xml_root = self.fetch_metadata(api_url, aid).find(
                 "atom:entry", self.ns
             )
-            print("Fetch metadata ran")
             if xml_root is None:
                 logger.warning("No xml_root found for arXiv ID %s", aid)
                 continue
             article_data[aid] = self.extract_metadata(
                 xml_root, aid
             )
-            print("Extract metadata ran")
-
+            logger.info("Successfully fetched details for %s",aid)
         # Build and return summary
         content = self._build_summary(article_data)
         return Command(

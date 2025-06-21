@@ -4,6 +4,7 @@ Tool for downloading bioRxiv paper metadata and retrieving the PDF URL.
 """
  
 import logging
+import xml.etree.ElementTree as ET
 from typing import Annotated, Any, List
  
 import hydra
@@ -23,13 +24,8 @@ logger = logging.getLogger(__name__)
 class DownloadBiorxivPaperInput(BasePaperRetriever):
     """Input schema for the bioRxiv paper download tool."""
  
-    # doi: List[str] = Field(description=
-    # """List of bioRxiv DOIs, from search_helper or multi_helper or single_helper,
-    # used to retrieve paper details and PDF URLs"""
-    # )
-    # tool_call_id: Annotated[str, InjectedToolCallId]
- 
     def __init__(self):
+        self.ns = {"atom": "http://www.w3.org/2005/Atom"}
         self.request_timeout=None
 
     # Helper to load bioRxiv download configuration
@@ -43,7 +39,7 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
     
     def fetch_metadata(
             self, url: str, paper_id: str
-            ) -> dict:
+            ) -> ET.Element:
         """
         Fetch metadata for a bioRxiv paper using its DOI and extract relevant fields.
         
@@ -56,32 +52,42 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
         # Strip any version suffix (e.g., v1) since bioRxiv's API is version-sensitive
         clean_doi = paper_id.split("v")[0]
     
-        api_url = f"{url}{clean_doi}"
-        logger.info("Fetching metadata from api url: %s", api_url)
-        response = requests.get(api_url, timeout=self.request_timeout)
+        a_url = f"{url}{clean_doi}"
+        logger.info("Fetching metadata from api url: %s", a_url)
+        response = requests.get(a_url, timeout=self.request_timeout)
         response.raise_for_status()
+        print(response.text)
+        return ET.fromstring(response.text)
     
-        data = response.json()
-        if not data.get("collection"):
-            raise ValueError(f"No metadata found for DOI: {paper_id}")
-    
-        data = response.json()
-    
-        return data["collection"][0]
-    
-    def extract_metadata(self,paper: dict, doi: str) -> dict:
+    def extract_metadata(self,xml_root: ET.Element,paper_id: str) -> dict:
         """
         Extract relevant metadata fields from a bioRxiv paper entry.
         """
-        title = paper.get("title", "")
-        authors = paper.get("authors", "")
-        abstract = paper.get("abstract", "")
-        pub_date = paper.get("date", "")
-        doi_suffix = paper.get("doi", "").split("10.1101/")[-1]
+        logger.info("Extracting metadata for %s",paper_id)
+        title_elem = xml_root.find("atom:title", self.ns)
+        title = (title_elem.text or "").strip() if title_elem is not None else "N/A"
+        print("Title done")
+        authors = []
+        for author_elem in xml_root.findall("atom:authors", self.ns):
+            name_elem = author_elem.find("atom:name", self.ns)
+            if name_elem is not None and name_elem.text:
+                authors.append(name_elem.text.strip())
+        print("Authors done")
+        summary_elem = xml_root.find("atom:abstract", self.ns)
+        abstract = (summary_elem.text or "").strip() if summary_elem is not None else "N/A"
+        print("Abstract done")
+        published_elem = xml_root.find("atom:date", self.ns)
+        pub_date = (
+            (published_elem.text or "").strip() if published_elem is not None else "N/A"
+        )
+        print("Date done")
+        doi_elem = xml_root.find("atom:doi", self.ns)
+        doi_suffix = doi_elem.text.split("10.1101/")[-1]
+        print("Date done")
         pdf_url = f"https://www.biorxiv.org/content/10.1101/{doi_suffix}.full.pdf"
         logger.info("PDF URL: %s", pdf_url)
         if not pdf_url:
-            raise ValueError(f"No PDF URL found for DOI: {doi}")
+            raise ValueError(f"No PDF URL found for DOI: {paper_id}")
         return {
             "Title": title,
             "Authors": authors,
@@ -91,7 +97,7 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
             "pdf_url": pdf_url,
             "filename": f"{doi_suffix}.pdf",
             "source": "biorxiv",
-            "biorxiv_id": doi
+            "biorxiv_id": paper_id
         }
     
     def _get_snippet(self,abstract: str) -> str:
@@ -128,10 +134,6 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
             "Top 3 papers:\n" + summary
         )
     
-    # @tool(
-    #     args_schema=DownloadBiorxivPaperInput,
-    #     parse_docstring=True,
-    # )
     def paper_retriever(
         self,
         paper_ids: List[str],
@@ -140,7 +142,7 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
         """
         Get metadata and PDF URLs for one or more bioRxiv papers using their unique dois.
         """
-        logger.info("Fetching metadata from arXiv for paper IDs: %s", paper_ids)
+        logger.info("Fetching metadata from biorxiv for paper IDs: %s", paper_ids)
     
         # Load configuration
         config = self.load_hydra_configs()
@@ -152,7 +154,10 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
         for doi in paper_ids:
             logger.info("Processing DOI: %s", doi)
             # Fetch metadata
-            entry = self.fetch_metadata(doi, api_url)
+            entry = self.fetch_metadata(api_url,doi).find(
+                "atom:entry", self.ns
+            )
+            print("Done fetching metadata")
             if entry is None:
                 logger.warning("No entry found for bioRxiv ID %s", doi)
                 continue

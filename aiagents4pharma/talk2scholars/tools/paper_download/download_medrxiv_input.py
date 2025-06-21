@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Tool for downloading medRxiv paper metadata and retrieving the PDF URL.
+Tool for downloading MedRxiv paper metadata and retrieving the PDF URL.
 """
  
 import logging
+import xml.etree.ElementTree as ET
 from typing import Annotated, Any, List
  
 import hydra
@@ -14,68 +15,74 @@ from langchain_core.tools.base import InjectedToolCallId
 from langgraph.types import Command
 from pydantic import BaseModel, Field
 from .base_retreiver import BasePaperRetriever
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
  
  
 class DownloadMedrxivPaperInput(BasePaperRetriever):
-    """Input schema for the medRxiv paper download tool."""
+    """Input schema for the MedRxiv paper download tool."""
  
-    # doi: List[str] = Field(description=
-    # """List of medRxiv DOIs, from search_helper or multi_helper or single_helper,
-    # used to retrieve the paper details and PDF URL."""
-    # )
-    # tool_call_id: Annotated[str, InjectedToolCallId]
- 
-    # Helper to load medRxiv download configuration
+    def __init__(self):
+        self.ns = {"atom": "http://www.w3.org/2005/Atom"}
+        self.request_timeout=None
+
+    # Helper to load MedRxiv download configuration
     def load_hydra_configs(self) -> Any:
-        """Load medRxiv download configuration."""
+        """Load MedRxiv download configuration."""
         with hydra.initialize(version_base=None, config_path="../../configs"):
             cfg = hydra.compose(
                 config_name="config", overrides=["tools/download_medrxiv_paper=default"]
             )
         return cfg.tools.download_medrxiv_paper
     
-    # Fetching raw metadata from medRxiv API for a given DOI
-    def fetch_medrxiv_metadata(self,doi: str, api_url: str, request_timeout: int) -> dict:
+    def fetch_metadata(
+            self, url: str, paper_id: str
+            ) -> ET.Element:
         """
-        Fetch metadata for a medRxiv paper using its DOI and extract relevant fields.
-    
+        Fetch metadata for a MedRxiv paper using its DOI and extract relevant fields.
+        
         Parameters:
-            doi (str): List of DOIs of the medRxiv paper.
-    
+            doi (str): List of DOIs of the MedRxiv paper.
+        
         Returns:
             dict: A dictionary containing the title, authors, abstract, publication date, and URLs.
         """
-        # Strip any version suffix (e.g., v1) since bioRxiv's API is version-sensitive
-        clean_doi = doi.split("v")[0]
+        # Strip any version suffix (e.g., v1) since MedRxiv's API is version-sensitive
+        clean_doi = paper_id.split("v")[0]
     
-        api_url = f"{api_url}{clean_doi}"
+        api_url = f"{url}{clean_doi}"
         logger.info("Fetching metadata from api url: %s", api_url)
-        response = requests.get(api_url, timeout=request_timeout)
+        response = requests.get(api_url, timeout=self.request_timeout)
         response.raise_for_status()
+        return ET.fromstring(response.text)
     
-        data = response.json()
-        if not data.get("collection"):
-            raise ValueError(f"No entry found for medRxiv ID {doi}")
-    
-        return data["collection"][0]
-    
-    # Extracting relevant metadata fields from the raw data
-    def extract_metadata(self,paper: dict, doi: str) -> dict:
+    def extract_metadata(self,xml_root: ET.Element,paper_id: str) -> dict:
         """
-        Extract relevant metadata fields from a medRxiv paper entry.
+        Extract relevant metadata fields from a MedRxiv paper entry.
         """
-        title = paper.get("title", "")
-        authors = paper.get("authors", "")
-        abstract = paper.get("abstract", "")
-        pub_date = paper.get("date", "")
-        doi_suffix = paper.get("doi", "").split("10.1101/")[-1]
+        title_elem = xml_root.find("atom:title", self.ns)
+        title = (title_elem.text or "").strip() if title_elem is not None else "N/A"
+
+        authors = []
+        for author_elem in xml_root.findall("atom:authors", self.ns):
+            name_elem = author_elem.find("atom:name", self.ns)
+            if name_elem is not None and name_elem.text:
+                authors.append(name_elem.text.strip())
+
+        summary_elem = xml_root.find("atom:abstract", self.ns)
+        abstract = (summary_elem.text or "").strip() if summary_elem is not None else "N/A"
+        published_elem = xml_root.find("atom:date", self.ns)
+        pub_date = (
+            (published_elem.text or "").strip() if published_elem is not None else "N/A"
+        )
+        doi_elem = xml_root.find("atom:doi", self.ns)
+        doi_suffix = doi_elem.text.split("10.1101/")[-1]
         pdf_url = f"https://www.medrxiv.org/content/10.1101/{doi_suffix}.full.pdf"
         logger.info("PDF URL: %s", pdf_url)
         if not pdf_url:
-            raise ValueError(f"No PDF URL found for medRxiv ID {doi}")
+            raise ValueError(f"No PDF URL found for DOI: {paper_id}")
         return {
             "Title": title,
             "Authors": authors,
@@ -85,8 +92,9 @@ class DownloadMedrxivPaperInput(BasePaperRetriever):
             "pdf_url": pdf_url,
             "filename": f"{doi_suffix}.pdf",
             "source": "medrxiv",
-            "medrxiv_id": doi
+            "medrxiv_id": paper_id
         }
+    
     def _get_snippet(self,abstract: str) -> str:
         """Extract the first one or two sentences from an abstract."""
         if not abstract or abstract == "N/A":
@@ -121,34 +129,31 @@ class DownloadMedrxivPaperInput(BasePaperRetriever):
             "Top 3 papers:\n" + summary
         )
     
-    
-    # Tool to download medRxiv paper metadata and PDF URL
-    # @tool(
-    #     args_schema=DownloadMedrxivPaperInput,
-    #     parse_docstring=True
-    # )
     def paper_retriever(
         self,
-        dois: List[str],
+        paper_ids: List[str],
         tool_call_id: Annotated[str, InjectedToolCallId],
     ) -> Command[Any]:
         """
-        Get metadata and PDF URL for one or more medRxiv papers using its doi.
+        Get metadata and PDF URLs for one or more MedRxiv papers using their unique dois.
         """
-        logger.info("Fetching metadata from medRxiv for DOI: %s", dois)
+        logger.info("Fetching metadata from medrxiv for paper IDs: %s", paper_ids)
     
         # Load configuration
-        cfg = self.load_hydra_configs()
-        api_url = cfg.api_url
-        request_timeout = cfg.request_timeout
-            # Aggregate results
+        config = self.load_hydra_configs()
+        api_url = config.api_url
+        self.request_timeout = config.request_timeout
+    
+        # Aggregate results
         article_data: dict[str, Any] = {}
-        for doi in dois:
+        for doi in paper_ids:
             logger.info("Processing DOI: %s", doi)
             # Fetch metadata
-            entry = self.fetch_medrxiv_metadata(doi, api_url, request_timeout)
+            entry = self.fetch_metadata(api_url,doi).find(
+                "atom:entry", self.ns
+            )
             if entry is None:
-                logger.warning("No entry found for bioRxiv ID %s", doi)
+                logger.warning("No entry found for MedRxiv ID %s", doi)
                 continue
             # Extract relevant metadata
             article_data = self.extract_metadata(entry, doi)
