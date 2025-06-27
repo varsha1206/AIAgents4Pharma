@@ -4,6 +4,8 @@ Tool to download paper from Arxiv,Biorxiv, Medrxiv
 """
 import logging
 from langchain_core.tools import tool
+from langgraph.types import Command
+from langchain_core.messages import ToolMessage
 from langchain_core.tools.base import InjectedToolCallId
 from langgraph.prebuilt import InjectedState
 from typing import Annotated, Literal, List
@@ -20,10 +22,17 @@ logger = logging.getLogger(__name__)
 
 class DownloadSourceDetermination(BaseModel):
     """
-    Structured output schema for the source of the paper to be downloaded
-    - the source is "arxiv" for arxiv ids and biorxiv for DOIs 
+    Structured output schema to determine the list of paper ids to be downloaded
+    - arxiv_ids like ["arxiv_id:1212.0001"] and DOIs like ["10.1101/2025.06.22.660927"] 
     """
-    source: Literal["arxiv", "biorxiv"]
+    arxiv_ids: List[str] = Field(
+        ...,
+        description="The list of arxiv ids of the papers. For example: arxiv_id:1212.0001",
+    )
+    dois: List[str] = Field(
+        ...,
+        description="The list of DOIs of the papers. For example: DOI:10.1101/2025.06.22.660927",
+    )
 
 
 class DownloadPaperInput(BaseModel):
@@ -31,7 +40,7 @@ class DownloadPaperInput(BaseModel):
     tool_call_id: Annotated[str, InjectedToolCallId]
     state: Annotated[dict, InjectedState]
 
-@tool(args_schema=DownloadPaperInput, return_direct=True)
+@tool(args_schema=DownloadPaperInput)
 def download_paper(paper_id: List[str], tool_call_id: Annotated[str, InjectedToolCallId],state: Annotated[dict, InjectedState]):
     """
     Download a paper given its ID and source (e.g., arXiv or Biorxiv).
@@ -39,16 +48,53 @@ def download_paper(paper_id: List[str], tool_call_id: Annotated[str, InjectedToo
     logger.info("Inside paper download tool")
     llm_model = state.get("llm_model")
     structured_llm = llm_model.with_structured_output(DownloadSourceDetermination)
-    source_obj = structured_llm.invoke([f"The paper ids are {paper_id}. Identify the source (arxiv or biorxiv)."])
-    logger.info("Source chosen by LLM: %s",source_obj.source)
-    if source_obj.source =='arxiv':
+    collective_ids = structured_llm.invoke([f"The paper ids are {paper_id}. Identify the arxiv ids and dois."])
+    arxiv_ids = collective_ids.arxiv_ids
+    dois = collective_ids.dois
+    logger.info("arxiv ids: %s",arxiv_ids)
+    logger.info("dois: %s",dois)
+    all_article_data = {}
+    all_messages = []
+    if arxiv_ids:
         logger.info("Getting into arxiv")
         retriever = DownloadArxivPaperInput()
-    elif source_obj.source=='biorxiv':
-        logger.info("Getting into bioarxiv")
-        retriever = DownloadBiorxivPaperInput()
-    else:
-        logger.info("Getting into medrxiv")
-        retriever = DownloadMedrxivPaperInput()
+        arxiv_cmd =  retriever.paper_retriever(paper_ids=arxiv_ids, tool_call_id=tool_call_id)
+        if arxiv_cmd.update:
+            all_article_data.update(arxiv_cmd.update["article_data"])
+            all_messages.extend(arxiv_cmd.update["messages"])
+            logger.info("Recieved papers from arxiv")
+    if dois:
+        try:
+            logger.info("Getting into bioarxiv")
+            retriever = DownloadBiorxivPaperInput()
+            doi_cmd =  retriever.paper_retriever(paper_ids=dois, tool_call_id=tool_call_id)
+            logger.info("Recieved papers from bioarxiv")
+        except Exception:
+            logger.info("Getting into medrxiv")
+            retriever = DownloadMedrxivPaperInput()
+            doi_cmd = retriever.paper_retriever(paper_ids=dois, tool_call_id=tool_call_id)
+            logger.info("Recieved papers from medarxiv")
+        if doi_cmd.update:
+            all_article_data.update(doi_cmd.update["article_data"])
+            all_messages.extend(doi_cmd.update["messages"])
 
-    return retriever.paper_retriever(paper_ids=paper_id, tool_call_id=tool_call_id)
+    content=""
+    for msg in all_messages:
+        content += msg.content
+    logger.info("Download tool run completed")
+    logger.info("Final ToolMessages: %s", content)
+
+    
+    return Command(
+        update = {
+            "article_data": all_article_data,
+        "messages": [
+            ToolMessage(
+                content=content,
+                tool_call_id=tool_call_id,
+                artifact=all_article_data,
+            )
+        ],
+        }
+    )
+ 
