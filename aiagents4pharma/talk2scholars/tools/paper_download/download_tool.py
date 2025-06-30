@@ -15,6 +15,7 @@ import re
 from .download_arxiv_input import DownloadArxivPaperInput
 from .download_biorxiv_input import DownloadBiorxivPaperInput
 from .download_medrxiv_input import DownloadMedrxivPaperInput
+from .download_pubmed_input import DownloadPubmedPaperInput
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -23,7 +24,9 @@ logger = logging.getLogger(__name__)
 class DownloadSourceDetermination(BaseModel):
     """
     Structured output schema to determine the list of paper ids to be downloaded
-    - arxiv_ids like ["arxiv_id:1212.0001"] and DOIs like ["10.1101/2025.06.22.660927"] 
+    - arxiv_ids like ["arxiv_id:1212.0001"]
+    - DOIs like ["10.1101/2025.06.22.660927"]
+    - Pubmed ids like ["pmc: PMC123456"] or ["pmc: 123456"] 
     """
     arxiv_ids: List[str] = Field(
         ...,
@@ -32,6 +35,10 @@ class DownloadSourceDetermination(BaseModel):
     dois: List[str] = Field(
         ...,
         description="The list of DOIs of the papers. For example: DOI:10.1101/2025.06.22.660927",
+    )
+    pubmed_ids: List[str] = Field(
+        ...,
+        description="The list of pubmed ids of the papers. For example: pubmed: PMC123456",
     )
 
 
@@ -51,8 +58,10 @@ def download_paper(paper_id: List[str], tool_call_id: Annotated[str, InjectedToo
     collective_ids = structured_llm.invoke([f"The paper ids are {paper_id}. Identify the arxiv ids and dois."])
     arxiv_ids = collective_ids.arxiv_ids
     dois = collective_ids.dois
+    pubmed_ids = collective_ids.pubmed_ids
     logger.info("arxiv ids: %s",arxiv_ids)
     logger.info("dois: %s",dois)
+    logger.info("pubmed: %s",pubmed_ids)
     all_article_data = {}
     all_messages = []
     if arxiv_ids:
@@ -63,6 +72,16 @@ def download_paper(paper_id: List[str], tool_call_id: Annotated[str, InjectedToo
             all_article_data.update(arxiv_cmd.update["article_data"])
             all_messages.extend(arxiv_cmd.update["messages"])
             logger.info("Recieved papers from arxiv")
+    
+    if pubmed_ids:
+        logger.info("Getting into Pubmed")
+        retriever = DownloadPubmedPaperInput()
+        pubmed_cmd = retriever.paper_retriever(paper_ids=pubmed_ids, tool_call_id=tool_call_id)
+        if pubmed_cmd.update:
+            all_article_data.update(pubmed_cmd.update["article_data"])
+            all_messages.extend(pubmed_cmd.update["messages"])
+            logger.info("Recieved papers from pubmed")
+
     if dois:
         try:
             logger.info("Getting into bioarxiv")

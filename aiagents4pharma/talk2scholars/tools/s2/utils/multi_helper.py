@@ -137,12 +137,12 @@ class MultiPaperRecData:
             arxiv = ext.get("ArXiv")
             if arxiv:
                 ids.append(f"arxiv:{arxiv}")
-            # pubmed = ext.get("PubMed")
-            # if pubmed:
-            #     ids.append(f"pubmed:{pubmed}")
-            # pmc = ext.get("PubMedCentral")
-            # if pmc:
-            #     ids.append(f"pmc:{pmc}")
+            pubmed = ext.get("PubMed")
+            if pubmed:
+                ids.append(f"pubmed:{pubmed}")
+            pmc = ext.get("PubMedCentral")
+            if pmc:
+                ids.append(f"pmc:{pmc}")
             doi_id = ext.get("DOI")
             if doi_id:
                 ids.append(f"doi:{doi_id}")
