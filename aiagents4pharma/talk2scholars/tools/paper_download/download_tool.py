@@ -8,7 +8,7 @@ from langgraph.types import Command
 from langchain_core.messages import ToolMessage
 from langchain_core.tools.base import InjectedToolCallId
 from langgraph.prebuilt import InjectedState
-from typing import Annotated, Literal, List
+from typing import Annotated, Literal, List,Any
 from pydantic import BaseModel, Field
 import re
 
@@ -16,6 +16,7 @@ from .download_arxiv_input import DownloadArxivPaperInput
 from .download_biorxiv_input import DownloadBiorxivPaperInput
 from .download_medrxiv_input import DownloadMedrxivPaperInput
 from .download_pubmed_input import DownloadPubmedPaperInput
+from .utils import summary_builder
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -63,24 +64,27 @@ def download_paper(paper_id: List[str], tool_call_id: Annotated[str, InjectedToo
     logger.info("dois: %s",dois)
     logger.info("pubmed: %s",pubmed_ids)
     all_article_data = {}
-    all_messages = []
     if arxiv_ids:
         logger.info("Getting into arxiv")
         retriever = DownloadArxivPaperInput()
-        arxiv_cmd =  retriever.paper_retriever(paper_ids=arxiv_ids, tool_call_id=tool_call_id)
-        if arxiv_cmd.update:
-            all_article_data.update(arxiv_cmd.update["article_data"])
-            all_messages.extend(arxiv_cmd.update["messages"])
-            logger.info("Recieved papers from arxiv")
+        try:
+            arxiv_cmd =  retriever.paper_retriever(paper_ids=arxiv_ids, tool_call_id=tool_call_id)
+            if arxiv_cmd:
+                all_article_data.update(arxiv_cmd["article_data"])
+                logger.info("Recieved papers from arxiv")
+        except Exception as e:
+            print("Arxiv:",e)
     
     if pubmed_ids:
         logger.info("Getting into Pubmed")
         retriever = DownloadPubmedPaperInput()
-        pubmed_cmd = retriever.paper_retriever(paper_ids=pubmed_ids, tool_call_id=tool_call_id)
-        if pubmed_cmd.update:
-            all_article_data.update(pubmed_cmd.update["article_data"])
-            all_messages.extend(pubmed_cmd.update["messages"])
-            logger.info("Recieved papers from pubmed")
+        try:
+            pubmed_cmd = retriever.paper_retriever(paper_ids=pubmed_ids, tool_call_id=tool_call_id)
+            if pubmed_cmd:
+                all_article_data.update(pubmed_cmd["article_data"])
+                logger.info("Recieved papers from pubmed")
+        except Exception as e:
+            print("Pubmed:",e)
 
     if dois:
         try:
@@ -93,16 +97,16 @@ def download_paper(paper_id: List[str], tool_call_id: Annotated[str, InjectedToo
             retriever = DownloadMedrxivPaperInput()
             doi_cmd = retriever.paper_retriever(paper_ids=dois, tool_call_id=tool_call_id)
             logger.info("Recieved papers from medarxiv")
-        if doi_cmd.update:
-            all_article_data.update(doi_cmd.update["article_data"])
-            all_messages.extend(doi_cmd.update["messages"])
+        try:
+            if doi_cmd:
+                all_article_data.update(doi_cmd["article_data"])
+        except Exception as e:
+            print("BIOMED:",e)
 
-    content=""
-    for msg in all_messages:
-        content += msg.content
+    content = summary_builder._build_summary(all_article_data)
+
     logger.info("Download tool run completed")
     logger.info("Final ToolMessages: %s", content)
-
     
     return Command(
         update = {

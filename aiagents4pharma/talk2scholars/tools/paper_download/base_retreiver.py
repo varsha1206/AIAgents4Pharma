@@ -52,32 +52,7 @@ class BasePaperRetriever(ABC):
         pass
 
     @abstractmethod
-    def _get_snippet(self,abstract: str) -> str:
-        """Extract the first one or two sentences from an abstract.
-        
-        Args:
-            abstract (str): The Abstract of the paper extracted
-
-        Returns:
-            str: Returns the first one or two lines of the abstract
-        """
-        pass
-
-    @abstractmethod
-    def _build_summary(self,article_data: dict[str, Any]) -> str:
-        """
-        Build a summary for upto three papers by adding their snippets
-
-        Args:
-            article_data (dict): The metadata of the articles which have been extracted
-
-        Returns:
-            str: Summary snippet for each of the top 3 papers
-        """
-        pass
-
-    @abstractmethod
-    def paper_retriever(self, paper_ids: List[str], tool_call_id: Annotated[str, InjectedToolCallId]) -> Command[Any]:
+    def paper_retriever(self, paper_ids: List[str], tool_call_id: Annotated[str, InjectedToolCallId]) -> dict:
         """
         Unified entry point for retrieving paper metadata and PDF.
 
@@ -86,6 +61,6 @@ class BasePaperRetriever(ABC):
             tool_call_id (str): Injected tool call ID for LangGraph communication.
 
         Returns:
-            Command[Any]: LangGraph-compatible output containing metadata and tool message.
+            Dict: Dictionary containing metadata.
         """
         pass

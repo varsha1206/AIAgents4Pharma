@@ -71,7 +71,7 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
         pdf_url = f"https://www.biorxiv.org/content/10.1101/{doi_suffix}.full.pdf"
         if requests.get(pdf_url,timeout=self.request_timeout).status_code != 200:
             print(f"No PDF found or access denied at {pdf_url}")
-            raise RuntimeError(f"No PDF found or access denied at {pdf_url}")
+            return {}
         logger.info("PDF URL: %s", pdf_url)
         return {
             "Title": title,
@@ -85,45 +85,11 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
             "biorxiv_id": paper_id
         }
     
-    def _get_snippet(self,abstract: str) -> str:
-        """Extract the first one or two sentences from an abstract."""
-        if not abstract or abstract == "N/A":
-            return ""
-        sentences = abstract.split(". ")
-        snippet_sentences = sentences[:2]
-        snippet = ". ".join(snippet_sentences)
-        if not snippet.endswith("."):
-            snippet += "."
-        return snippet
-    
-    def _build_summary(self,article_data: dict[str, Any]) -> str:
-        """Build a summary string for up to three papers with snippets."""
-        top = list(article_data.values())[:3]
-        lines: list[str] = []
-        for idx, paper in enumerate(top):
-            title = paper.get("Title", "N/A")
-            pub_date = paper.get("Publication Date", "N/A")
-            url = paper.get("URL", "")
-            snippet = self._get_snippet(paper.get("Abstract", ""))
-            line = f"{idx+1}. {title} ({pub_date})"
-            if url:
-                line += f"\n   View PDF: {url}"
-            if snippet:
-                line += f"\n   Abstract snippet: {snippet}"
-            lines.append(line)
-        summary = "\n".join(lines)
-        return (
-            "Download was successful. Papers metadata are attached as an artifact. "
-            "Here is a summary of the results:\n"
-            f"Number of papers found: {len(article_data)}\n"
-            "Top 3 papers:\n" + summary
-        )
-    
     def paper_retriever(
         self,
         paper_ids: List[str],
         tool_call_id: Annotated[str, InjectedToolCallId],
-    ) -> Command[Any]:
+    ) -> dict:
         """
         Get metadata and PDF URLs for one or more bioRxiv papers using their unique dois.
         """
@@ -145,21 +111,19 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
                 logger.warning("No entry found for bioRxiv ID %s", doi)
                 continue
             # Extract relevant metadata
-            article_data[doi] = self.extract_metadata(entry, doi)
-    
+            metadata = self.extract_metadata(entry, doi)
+            if metadata:
+                article_data[doi]=metadata
+                logger.info("Metadata fetched for %s",doi)
+            else:
+                logger.info("PDF could not be accessed")
+                continue
+
         # Build and return summary
-        content = self._build_summary(article_data)
+        # content = self._build_summary(article_data)
+        content = "Paper details fetched successfully."
         logger.info("Succesfully ran the biorxiv tool")
-        return Command(
-            update={
-                "article_data": article_data,
-                "messages": [
-                    ToolMessage(
-                        content=content,
-                        tool_call_id=tool_call_id,
-                        artifact=article_data,
-                    )
-                ],
-            }
-        )
+        return {
+            "article_data": article_data
+        }
  
