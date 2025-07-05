@@ -9,9 +9,8 @@ import xml.etree.ElementTree as ET
 from typing import Annotated, Any, List
 
 import hydra
-from langchain_core.messages import ToolMessage
 from langchain_core.tools.base import InjectedToolCallId
-from langgraph.types import Command
+
 from .base_retreiver import BasePaperRetriever
 
 logger = logging.getLogger(__name__)
@@ -87,24 +86,27 @@ class DownloadPubmedPaperInput(BasePaperRetriever):
             "source": "pubmed",
             "pmc_id": paper_id,
         }
-    
+   
     def map_ids(self, input_id: str, map_url: str) -> str:
         """Mapping the PM ID or DOI of paper in order to get the PMC ID"""
         response = requests.get(f"{map_url}?ids={input_id}", timeout=10)
         response.raise_for_status()
         root = ET.fromstring(response.text)
-        if ((record := root.find("record")) is not None and record.attrib.get("pmcid")):
+        pmc_id = None
+        if (
+            (record := root.find("record")) is not None 
+            and record.attrib.get("pmcid")
+            ):
             logger.info("Retrieved PMC ID for the given id %s", input_id)
             pmc_id =  record.attrib["pmcid"]
-            if pmc_id is not None:
-                logger.info("Found pmc id %s",pmc_id)
-            return pmc_id 
+        if pmc_id is not None:
+            logger.info("Found pmc id %s",pmc_id)
+        return pmc_id 
 
     def paper_retriever(
         self,
-        paper_ids: List[str],
-        tool_call_id: Annotated[str, InjectedToolCallId]
-    ) -> dict:
+        paper_ids: List[str]
+    ) ->dict[str, Any]:
         """
         Get metadata and PDF URL for an pubmed paper using its unique PMC ID.
         """
@@ -136,11 +138,8 @@ class DownloadPubmedPaperInput(BasePaperRetriever):
                 xml_root, paper_id
             )
             logger.info("Successfully fetched details for %s",paper_id)
-        # Build and return summary
 
-        # content = self._build_summary(article_data)
-        content = "Paper details fetched successfully."
         return {
             "article_data": article_data
         }
-    
+  

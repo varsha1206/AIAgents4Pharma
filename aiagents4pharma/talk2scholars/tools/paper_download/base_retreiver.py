@@ -3,11 +3,7 @@
 Base Abstract Class definition to be followed when retrieving paper metadata from different sources.
 """
 from abc import ABC, abstractmethod
-import xml.etree.ElementTree as ET
-from typing import Annotated, Any, List
-
-from langchain_core.tools.base import InjectedToolCallId
-from langgraph.types import Command
+from typing import Any,List
 
 class BasePaperRetriever(ABC):
     """
@@ -21,7 +17,6 @@ class BasePaperRetriever(ABC):
         """
         Load required configurations (e.g., URLs) using Hydra.
         """
-        pass
 
     @abstractmethod
     def fetch_metadata(self,url: str, paper_id: str) -> dict:
@@ -35,7 +30,6 @@ class BasePaperRetriever(ABC):
         Returns:
             dict: Dictionary containing the metadata.
         """
-        pass
 
     @abstractmethod
     def extract_metadata(self,data: dict, paper_id: str) -> dict:
@@ -49,10 +43,9 @@ class BasePaperRetriever(ABC):
         Returns:
             dict: Dictionary containing extracted metadata.
         """
-        pass
 
     @abstractmethod
-    def paper_retriever(self, paper_ids: List[str], tool_call_id: Annotated[str, InjectedToolCallId]) -> dict:
+    def paper_retriever(self, paper_ids: List[str]) -> dict[str, Any]:
         """
         Unified entry point for retrieving paper metadata and PDF.
 
@@ -63,4 +56,3 @@ class BasePaperRetriever(ABC):
         Returns:
             Dict: Dictionary containing metadata.
         """
-        pass

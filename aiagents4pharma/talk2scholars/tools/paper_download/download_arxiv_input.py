@@ -6,12 +6,11 @@ Tool for downloading arXiv paper metadata and retrieving the PDF URL.
 import logging
 import xml.etree.ElementTree as ET
 from typing import Annotated, Any, List
-
 import hydra
 import requests
-from langchain_core.messages import ToolMessage
+
 from langchain_core.tools.base import InjectedToolCallId
-from langgraph.types import Command
+
 from .base_retreiver import BasePaperRetriever
 
 # Configure logging
@@ -92,9 +91,8 @@ class DownloadArxivPaperInput(BasePaperRetriever):
 
     def paper_retriever(
         self,
-        paper_ids: List[str],
-        tool_call_id: Annotated[str, InjectedToolCallId],
-    ) -> dict:
+        paper_ids: List[str]
+    ) -> dict[str, Any]:
         """
         Get metadata and PDF URLs for one or more arXiv papers using their unique arXiv IDs.
         """
@@ -120,7 +118,6 @@ class DownloadArxivPaperInput(BasePaperRetriever):
             )
             logger.info("Successfully fetched details for %s",aid)
         # Build and return summary
-        content = "Paper details fetched successfully."
         return {
             "article_data": article_data
         }

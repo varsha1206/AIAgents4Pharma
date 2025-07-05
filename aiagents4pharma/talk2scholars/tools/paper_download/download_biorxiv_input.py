@@ -4,26 +4,21 @@ Tool for downloading bioRxiv paper metadata and retrieving the PDF URL.
 """
  
 import logging
-import xml.etree.ElementTree as ET
 from typing import Annotated, Any, List
- 
+
 import hydra
 import requests
-from langchain_core.messages import ToolMessage
-from langchain_core.tools import tool
 from langchain_core.tools.base import InjectedToolCallId
-from langgraph.types import Command
-from pydantic import BaseModel, Field
+
 from .base_retreiver import BasePaperRetriever
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
- 
- 
+logger = logging.getLogger(__name__) 
+
 class DownloadBiorxivPaperInput(BasePaperRetriever):
     """Input schema for the bioRxiv paper download tool."""
- 
+
     def __init__(self):
         self.request_timeout=None
 
@@ -35,29 +30,29 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
                 config_name="config", overrides=["tools/download_biorxiv_paper=default"]
             )
         return cfg.tools.download_biorxiv_paper
-    
+   
     def fetch_metadata(
             self, url: str, paper_id: str
             ) -> dict:
         """
         Fetch metadata for a bioRxiv paper using its DOI and extract relevant fields.
-        
+       
         Parameters:
             doi (str): List of DOIs of the bioRxiv paper.
-        
+       
         Returns:
             dict: A dict containing the title, authors, abstract, publication date, and URLs.
         """
         # Strip any version suffix (e.g., v1) since bioRxiv's API is version-sensitive
         clean_doi = paper_id.split("v")[0]
-    
+   
         a_url = f"{url}{clean_doi}"
         logger.info("Fetching metadata from api url: %s", a_url)
         response = requests.get(a_url, timeout=self.request_timeout)
         response.raise_for_status()
         information = response.json()
         return information["collection"][0]
-    
+  
     def extract_metadata(self,data: dict,paper_id: str) -> dict:
         """
         Extract relevant metadata fields from a bioRxiv paper entry.
@@ -84,22 +79,21 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
             "source": "biorxiv",
             "biorxiv_id": paper_id
         }
-    
+  
     def paper_retriever(
         self,
-        paper_ids: List[str],
-        tool_call_id: Annotated[str, InjectedToolCallId],
-    ) -> dict:
+        paper_ids: List[str]
+    ) -> dict[str, Any]:
         """
         Get metadata and PDF URLs for one or more bioRxiv papers using their unique dois.
         """
         logger.info("Fetching metadata from biorxiv for paper IDs: %s", paper_ids)
-    
+   
         # Load configuration
         config = self.load_hydra_configs()
         api_url = config.api_url
         self.request_timeout = config.request_timeout
-    
+   
         # Aggregate results
         article_data: dict[str, Any] = {}
         for doi in paper_ids:
@@ -119,11 +113,7 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
                 logger.info("PDF could not be accessed")
                 continue
 
-        # Build and return summary
-        # content = self._build_summary(article_data)
-        content = "Paper details fetched successfully."
         logger.info("Succesfully ran the biorxiv tool")
         return {
             "article_data": article_data
         }
- 
