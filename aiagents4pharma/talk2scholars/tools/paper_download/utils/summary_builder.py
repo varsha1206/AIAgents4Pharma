@@ -18,7 +18,7 @@ def _get_snippet(abstract: str) -> str:
     return snippet
 
 
-def _build_summary(article_data: dict[str, Any]) -> str:
+def build_summary(article_data: dict[str, Any]) -> str:
     """Build a summary string for up to three papers with snippets."""
     top = list(article_data.values())[:3]
     lines: list[str] = []

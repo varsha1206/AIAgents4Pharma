@@ -5,13 +5,10 @@ Tool for downloading arXiv paper metadata and retrieving the PDF URL.
 
 import logging
 import xml.etree.ElementTree as ET
-from typing import Annotated, Any, List
-
+from typing import Any, List
 import hydra
 import requests
-from langchain_core.messages import ToolMessage
-from langchain_core.tools.base import InjectedToolCallId
-from langgraph.types import Command
+
 from .base_retreiver import BasePaperRetriever
 
 # Configure logging
@@ -25,7 +22,7 @@ class DownloadArxivPaperInput(BasePaperRetriever):
     def __init__(self):
         self.ns = {"atom": "http://www.w3.org/2005/Atom"}
         self.request_timeout = None
-        
+
     # Helper to load arXiv download configuration
     def load_hydra_configs(self) -> Any:
         """Load arXiv download configuration."""
@@ -92,9 +89,8 @@ class DownloadArxivPaperInput(BasePaperRetriever):
 
     def paper_retriever(
         self,
-        paper_ids: List[str],
-        tool_call_id: Annotated[str, InjectedToolCallId],
-    ) -> dict:
+        paper_ids: List[str]
+    ) -> dict[str, Any]:
         """
         Get metadata and PDF URLs for one or more arXiv papers using their unique arXiv IDs.
         """
@@ -112,7 +108,9 @@ class DownloadArxivPaperInput(BasePaperRetriever):
             logger.info("Processing arXiv ID: %s", aid)
             # Fetch and parse metadata
             xml_root = self.fetch_metadata(api_url, aid)
-            if xml_root is None:
+            if xml_root["data"].find(
+                "atom:entry", self.ns
+            ) is None:
                 logger.warning("No xml_root found for arXiv ID %s", aid)
                 continue
             article_data[aid] = self.extract_metadata(
@@ -120,7 +118,6 @@ class DownloadArxivPaperInput(BasePaperRetriever):
             )
             logger.info("Successfully fetched details for %s",aid)
         # Build and return summary
-        content = "Paper details fetched successfully."
         return {
             "article_data": article_data
         }
