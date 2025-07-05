@@ -5,11 +5,9 @@ Tool for downloading arXiv paper metadata and retrieving the PDF URL.
 
 import logging
 import xml.etree.ElementTree as ET
-from typing import Annotated, Any, List
+from typing import Any, List
 import hydra
 import requests
-
-from langchain_core.tools.base import InjectedToolCallId
 
 from .base_retreiver import BasePaperRetriever
 
@@ -110,7 +108,9 @@ class DownloadArxivPaperInput(BasePaperRetriever):
             logger.info("Processing arXiv ID: %s", aid)
             # Fetch and parse metadata
             xml_root = self.fetch_metadata(api_url, aid)
-            if xml_root is None:
+            if xml_root["data"].find(
+                "atom:entry", self.ns
+            ) is None:
                 logger.warning("No xml_root found for arXiv ID %s", aid)
                 continue
             article_data[aid] = self.extract_metadata(

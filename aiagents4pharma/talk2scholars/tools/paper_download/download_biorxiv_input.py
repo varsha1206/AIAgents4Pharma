@@ -51,6 +51,8 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
         response = requests.get(a_url, timeout=self.request_timeout)
         response.raise_for_status()
         information = response.json()
+        if not information.get("collection"):
+            raise ValueError(f"No metadata found for DOI: {clean_doi}")
         return information["collection"][0]
   
     def extract_metadata(self,data: dict,paper_id: str) -> dict:
@@ -101,11 +103,9 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
             logger.info("Processing DOI: %s", doi)
             # Fetch metadata
             entry = self.fetch_metadata(api_url,doi)
-            if entry is None:
-                logger.warning("No entry found for bioRxiv ID %s", doi)
-                continue
             # Extract relevant metadata
             metadata = self.extract_metadata(entry, doi)
+
             if metadata:
                 article_data[doi]=metadata
                 logger.info("Metadata fetched for %s",doi)

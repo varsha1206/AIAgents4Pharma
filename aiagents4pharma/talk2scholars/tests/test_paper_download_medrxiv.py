@@ -1,38 +1,58 @@
 """
-Unit tests for medrXiv paper downloading functionality, including:
-- download_medrxiv_paper tool function.
+Unit tests for Medrxiv paper downloading functionality, including:
+- download_medRxiv_paper tool function.
 """
 
 import unittest
 from unittest.mock import MagicMock, patch
-from langchain_core.messages import ToolMessage
 
-from aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input import (
-    download_medrxiv_paper,
-)
-
+from aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input import DownloadMedrxivPaperInput
 
 class TestDownloadMedrxivPaper(unittest.TestCase):
-    """Tests for the download_medrxiv_paper tool."""
+    """Tests for the download_medRxiv_paper tool."""
+    @patch(
+    "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.hydra.initialize"
+    )
+    @patch(
+    "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.hydra.compose"
+    )
+    def test_load_hydra_configs_runs_and_sets_attributes(self,mock_compose, mock_initialize):
+        """
+        Ensures:
+        - logger.info runs
+        - hydra.initialize runs
+        - hydra.compose runs
+        - self.metadata_url etc. get set
+        """
+        retriever = DownloadMedrxivPaperInput()
+
+        # Fake config structure
+        mock_cfg = MagicMock()
+        mock_cfg.tools.download_medrxiv_paper.api_url = "https://api"
+        mock_compose.return_value = mock_cfg
+
+        retriever.load_hydra_configs()
+
+        mock_initialize.assert_called_once_with(version_base=None, config_path="../../configs")
+        mock_compose.assert_called_once_with(
+            config_name="config",
+            overrides=["tools/download_medrxiv_paper=default"]
+        )
+
+        assert retriever.api_url == "https://api"
 
     @patch(
-        "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.hydra.initialize"
+        "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.DownloadMedrxivPaperInput.load_hydra_configs"
     )
-    @patch(
-        "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.hydra.compose"
-    )
-    @patch(
-        "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.requests.get"
-    )
-    def test_download_medrxiv_paper_success(self, mock_get, mock_compose, mock_initialize):
+    @patch("requests.get")
+    def test_download_medrxiv_paper_success(self, mock_get, mock_load_hydra):
         """Test successful metadata and PDF URL retrieval."""
         dummy_cfg = MagicMock()
         dummy_cfg.tools.download_medrxiv_paper.api_url = "http://dummy.medrxiv.org/api"
         dummy_cfg.tools.download_medrxiv_paper.request_timeout = 10
-        mock_compose.return_value = dummy_cfg
-        mock_initialize.return_value.__enter__.return_value = None
+        mock_load_hydra.return_value = dummy_cfg
 
-        doi = "10.1101/2025.04.25.25326432"
+        doi = "10.1101/2025.05.13.653102"
 
         dummy_response = MagicMock()
         dummy_response.status_code = 200
@@ -40,7 +60,7 @@ class TestDownloadMedrxivPaper(unittest.TestCase):
         dummy_response.json.return_value = {
             "collection": [
                 {
-                    "title": "Sample Medrxiv Paper",
+                    "title": "Sample MedRxiv Paper",
                     "authors": "Author One; Author Two",
                     "abstract": "This is a medRxiv abstract.",
                     "date": "2025-04-25",
@@ -51,14 +71,14 @@ class TestDownloadMedrxivPaper(unittest.TestCase):
         }
         mock_get.return_value = dummy_response
 
-        tool_input = {"doi": doi, "tool_call_id": "test_tool_id"}
-        result = download_medrxiv_paper.run(tool_input)
-        update = result.update
+        tool_input = "doi:"+doi
+        downloader = DownloadMedrxivPaperInput()
+        update = downloader.paper_retriever([tool_input])
 
         self.assertIn("article_data", update)
         self.assertIn(doi, update["article_data"])
         metadata = update["article_data"][doi]
-        self.assertEqual(metadata["Title"], "Sample Medrxiv Paper")
+        self.assertEqual(metadata["Title"], "Sample MedRxiv Paper")
         self.assertEqual(metadata["Authors"], "Author One; Author Two")
         self.assertEqual(metadata["Abstract"], "This is a medRxiv abstract.")
         self.assertEqual(metadata["Publication Date"], "2025-04-25")
@@ -68,59 +88,44 @@ class TestDownloadMedrxivPaper(unittest.TestCase):
         self.assertEqual(metadata["source"], "medrxiv")
         self.assertEqual(metadata["medrxiv_id"], doi)
 
-        self.assertTrue(len(update["messages"]) >= 1)
-        self.assertIsInstance(update["messages"][0], ToolMessage)
-        self.assertIn("Successfully retrieved metadata and PDF URL", update["messages"][0].content)
-
     @patch(
-        "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.hydra.initialize"
+        "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.DownloadMedrxivPaperInput.load_hydra_configs"
     )
-    @patch(
-        "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.hydra.compose"
-    )
-    @patch(
-        "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.requests.get"
-    )
-    def test_no_entry_found(self, mock_get, mock_compose, mock_initialize):
+    @patch("requests.get")
+    def test_no_entry_found(self, mock_get, mock_load_hydra):
         """Test behavior when no 'entry' is in response."""
         dummy_cfg = MagicMock()
         dummy_cfg.tools.download_medrxiv_paper.api_url = "http://dummy.medrxiv.org/api"
         dummy_cfg.tools.download_medrxiv_paper.request_timeout = 10
-        mock_compose.return_value = dummy_cfg
-        mock_initialize.return_value.__enter__.return_value = None
+        mock_load_hydra.return_value = dummy_cfg
 
         dummy_response = MagicMock()
         dummy_response.status_code = 200
         dummy_response.raise_for_status = MagicMock()
-        dummy_response.json.return_value = {}  # No entry
+        dummy_response.json.return_value = {}  # No collection
         mock_get.return_value = dummy_response
 
-        doi = "10.1101/2025.04.25.25326432"
-        tool_input = {"doi": doi, "tool_call_id": "test_tool_id"}
+        doi = "10.1101/2025.05.13.653102"
+        tool_input = "doi:"+doi
 
+        downloader = DownloadMedrxivPaperInput()
         with self.assertRaises(ValueError) as context:
-            download_medrxiv_paper.run(tool_input)
+            downloader.paper_retriever([tool_input])
 
-        self.assertEqual(str(context.exception), f"No entry found for medRxiv ID {doi}")
+        self.assertEqual(str(context.exception), f"No metadata found for DOI: {doi}")
 
     @patch(
-        "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.hydra.initialize"
+        "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.DownloadMedrxivPaperInput.load_hydra_configs"
     )
-    @patch(
-        "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.hydra.compose"
-    )
-    @patch(
-        "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.requests.get"
-    )
-    def test_no_pdf_url_found(self, mock_get, mock_compose, mock_initialize):
+    @patch("requests.get")
+    def test_no_pdf_url_found(self, mock_get, mock_load_hydra):
         """Test fallback to DOI-based PDF URL construction when 'link' is missing."""
         dummy_cfg = MagicMock()
         dummy_cfg.tools.download_medrxiv_paper.api_url = "http://dummy.medrxiv.org/api"
         dummy_cfg.tools.download_medrxiv_paper.request_timeout = 10
-        mock_compose.return_value = dummy_cfg
-        mock_initialize.return_value.__enter__.return_value = None
+        mock_load_hydra.return_value = dummy_cfg
 
-        doi = "10.1101/2025.04.25.25326432"
+        doi = "10.1101/2025.05.13.653102"
 
         dummy_response = MagicMock()
         dummy_response.status_code = 200
@@ -128,7 +133,7 @@ class TestDownloadMedrxivPaper(unittest.TestCase):
         dummy_response.json.return_value = {
             "collection": [
                 {
-                    "title": "Sample Medrxiv Paper",
+                    "title": "Sample medRxiv Paper",
                     "authors": "Author One; Author Two",
                     "abstract": "This is a medRxiv abstract.",
                     "date": "2025-04-25",
@@ -139,13 +144,100 @@ class TestDownloadMedrxivPaper(unittest.TestCase):
         }
         mock_get.return_value = dummy_response
 
-        tool_input = {"doi": doi, "tool_call_id": "test_tool_id"}
-        result = download_medrxiv_paper.run(tool_input)
-        update = result.update
+        tool_input = "doi:"+doi
+        downloader = DownloadMedrxivPaperInput()
+        update = downloader.paper_retriever([tool_input])
         metadata = update["article_data"][doi]
 
-        # Assert that the PDF URL was constructed from DOI
         expected_suffix = doi.rsplit('/', maxsplit=1)[-1]
         expected_url = f"https://www.medrxiv.org/content/10.1101/{expected_suffix}.full.pdf"
 
         self.assertEqual(metadata["pdf_url"], expected_url)
+        self.assertEqual(metadata["URL"], expected_url)
+
+    @patch(
+        "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.DownloadMedrxivPaperInput.load_hydra_configs"
+    )
+    @patch("requests.get")
+    def test_extract_metadata_pdf_not_found(self, mock_get, mock_load_hydra):
+        """Test when PDF link returns non-200 status code (extract_metadata fallback)."""
+        dummy_cfg = MagicMock()
+        dummy_cfg.tools.download_medrxiv_paper.api_url = "http://dummy.medrxiv.org/api"
+        dummy_cfg.tools.download_medrxiv_paper.request_timeout = 10
+        mock_load_hydra.return_value = dummy_cfg
+
+        # Mock initial metadata fetch (metadata found)
+        metadata_response = MagicMock()
+        metadata_response.status_code = 200
+        metadata_response.raise_for_status = MagicMock()
+        metadata_response.json.return_value = {
+            "collection": [
+                {
+                    "title": "Test Title",
+                    "authors": "Test Author",
+                    "abstract": "Test Abstract",
+                    "date": "2025-04-25",
+                    "doi": "10.1101/2025.05.13.653102"
+                }
+            ]
+        }
+
+        # First GET returns metadata, second GET (PDF link) returns 404
+        def side_effect(url, timeout):
+            if "api" in url:
+                return metadata_response
+            else:
+                pdf_response = MagicMock()
+                pdf_response.status_code = 404  # Simulate PDF link not found
+                return pdf_response
+
+        mock_get.side_effect = side_effect
+
+        doi = "10.1101/2025.05.13.653102"
+        tool_input = "doi:" + doi
+        downloader = DownloadMedrxivPaperInput()
+        update = downloader.paper_retriever([tool_input])
+
+        # Should be empty because PDF was not accessible
+        self.assertNotIn(doi, update["article_data"])
+
+    @patch(
+        "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.DownloadMedrxivPaperInput.load_hydra_configs"
+    )
+    @patch("aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.DownloadMedrxivPaperInput.extract_metadata")
+    @patch("requests.get")
+    def test_paper_retriever_else_branch(self, mock_get, mock_extract_metadata, mock_load_hydra):
+        """Test paper_retriever hits 'else' branch when extract_metadata returns empty dict."""
+        dummy_cfg = MagicMock()
+        dummy_cfg.tools.download_medrxiv_paper.api_url = "http://dummy.medrxiv.org/api"
+        dummy_cfg.tools.download_medrxiv_paper.request_timeout = 10
+        mock_load_hydra.return_value = dummy_cfg
+
+        # Mock metadata fetch with valid collection
+        metadata_response = MagicMock()
+        metadata_response.status_code = 200
+        metadata_response.raise_for_status = MagicMock()
+        metadata_response.json.return_value = {
+            "collection": [
+                {
+                    "title": "Test Title",
+                    "authors": "Test Author",
+                    "abstract": "Test Abstract",
+                    "date": "2025-04-25",
+                    "doi": "10.1101/2025.05.13.653102"
+                }
+            ]
+        }
+        mock_get.return_value = metadata_response
+
+        # Force extract_metadata to return {}
+        mock_extract_metadata.return_value = {}
+
+        doi = "10.1101/2025.05.13.653102"
+        tool_input = "doi:" + doi
+        downloader = DownloadMedrxivPaperInput()
+        update = downloader.paper_retriever([tool_input])
+
+        # 'article_data' should not contain DOI because metadata is empty
+        self.assertNotIn(doi, update["article_data"])
+

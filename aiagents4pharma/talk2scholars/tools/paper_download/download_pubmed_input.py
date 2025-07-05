@@ -73,7 +73,8 @@ class DownloadPubmedPaperInput(BasePaperRetriever):
 
         pdf_url = f"{self.pdf_base_url}{paper_id}?pdf=render"
         if requests.get(pdf_url, timeout=10).status_code != 200:
-            raise RuntimeError(f"No PDF found or access denied at {pdf_url}")
+            logger.info(f"No PDF found or access denied at {pdf_url}")
+            return {}
 
         return {
             "Title": title,
@@ -119,27 +120,25 @@ class DownloadPubmedPaperInput(BasePaperRetriever):
             pre = pid.split(":")[0]
             pid = pid.split(":")[1]
             logger.info("Processing Pubmed ID: %s", pid)
-            try:
-                if pre == "pubmed":
-                    paper_id = self.map_ids(pid, self.map_url)
-                else:
-                    paper_id = pid
-            except Exception as e:
-                logger.info("Error in mapping IDs %s",e)
+            if pre == "pubmed":
+                paper_id = self.map_ids(pid, self.map_url)
+            else:
+                paper_id = pid
             if paper_id == None:
                 logger.info("PMC ID not available for %s",paper_id)
                 continue
             # Fetch and parse metadata
             xml_root = self.fetch_metadata(self.metadata_url, paper_id)
             if xml_root is None:
-                logger.warning("No xml_root found for pubmed ID %s", paper_id)
+                logger.info("No xml_root found for pubmed ID %s", paper_id)
                 continue
-            article_data[paper_id] = self.extract_metadata(
+
+            metadata = self.extract_metadata(
                 xml_root, paper_id
             )
+            article_data[paper_id] = metadata
             logger.info("Successfully fetched details for %s",paper_id)
 
         return {
             "article_data": article_data
         }
-  

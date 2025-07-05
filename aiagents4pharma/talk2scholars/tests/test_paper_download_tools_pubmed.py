@@ -2,273 +2,220 @@
 Unit tests for pubmed paper downloading functionality, including:
 - download_pubmed_paper tool function.
 """
+import pytest
+from unittest.mock import patch, MagicMock
+import xml.etree.ElementTree as ET
 
-import unittest
-from unittest.mock import MagicMock, patch
+from aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_input import DownloadPubmedPaperInput
 
-from langchain_core.messages import ToolMessage
-from aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper import (
-    download_pubmed_paper,
+@pytest.fixture
+def retriever():
+    return DownloadPubmedPaperInput()
+
+@patch(
+"aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_input.hydra.initialize"
 )
-
-class TestDownloadPubMedPaper(unittest.TestCase):
-    """Tests for the download_pubmed_paper tool."""
-    @patch(
-    "aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper.hydra.initialize"
+@patch(
+"aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_input.hydra.compose"
 )
-    @patch(
-    "aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper.hydra.compose"
+def test_load_hydra_configs_runs_and_sets_attributes(mock_compose, mock_initialize):
+    """
+    Ensures:
+    - logger.info runs
+    - hydra.initialize runs
+    - hydra.compose runs
+    - self.metadata_url etc. get set
+    """
+    retriever = DownloadPubmedPaperInput()
+
+    # Fake config structure
+    mock_cfg = MagicMock()
+    mock_cfg.tools.download_pubmed_paper.metadata_url = "https://metadata"
+    mock_cfg.tools.download_pubmed_paper.pdf_base_url = "https://pdf"
+    mock_cfg.tools.download_pubmed_paper.map_url = "https://map"
+    mock_compose.return_value = mock_cfg
+
+    retriever.load_hydra_configs()
+
+    mock_initialize.assert_called_once_with(version_base=None, config_path="../../configs")
+    mock_compose.assert_called_once_with(
+        config_name="config",
+        overrides=["tools/download_pubmed_paper=default"]
     )
-    @patch(
-    "aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper.requests.get"
+
+    assert retriever.metadata_url == "https://metadata"
+    assert retriever.pdf_base_url == "https://pdf"
+    assert retriever.map_url == "https://map"
+
+@patch("requests.get")
+def test_fetch_metadata_success(mock_get, retriever):
+    # Covers fetch_metadata (lines 27–34)
+    mock_response = MagicMock()
+    mock_response.text = "<foo>bar</foo>"
+    mock_response.raise_for_status.return_value = None
+    mock_get.return_value = mock_response
+
+    result = retriever.fetch_metadata("http://example.org", "123")
+    assert "data" in result
+    assert isinstance(result["data"], ET.Element)
+    mock_get.assert_called_once_with(
+        "http://example.org",
+        params={"db": "pmc", "id": "123", "retmode": "xml"},
+        timeout=10,
     )
-    def test_download_pubmed_paper_success(self, mock_get, mock_compose, mock_initialize):
-        """Test successful retrieval of metadata and PDF URL."""
-        # Dummy config
-        dummy_cfg = MagicMock()
-        dummy_cfg.tools.download_pubmed_paper.metadata_url = "http://dummy.pubmed.org/api"
-        dummy_cfg.tools.download_pubmed_paper.pdf_base_url = "http://dummy.pubmed.org/pdf/"
-        mock_compose.return_value = dummy_cfg
-        mock_initialize.return_value.__enter__.return_value = None
 
-        # PMC ID
-        paper_id = "PMC123456"
 
-        # Dummy XML with required fields
-        dummy_xml = """
-        <article>
-            <front>
-                <article-meta>
-                    <title-group>
-                        <article-title>Sample PubMed Title</article-title>
-                    </title-group>
-                    <abstract>This is a sample abstract.</abstract>
-                    <contrib-group>
-                        <contrib contrib-type=\"author\">
-                            <name>
-                                <given-names>John</given-names>
-                                <surname>Doe</surname>
-                            </name>
-                        </contrib>
-                    </contrib-group>
-                    <pub-date>
-                        <year>2020</year>
-                    </pub-date>
-                </article-meta>
-            </front>
-        </article>
-        """
-        dummy_response_metadata = MagicMock()
-        dummy_response_metadata.text = dummy_xml
-        dummy_response_metadata.raise_for_status = MagicMock()
+@patch("requests.get")
+def test_extract_metadata_success_pdf_found(mock_get, retriever):
+    # Covers extract_metadata success path (lines 42–49)
+    retriever.pdf_base_url = "http://example.org/"
 
-        dummy_response_pdf = MagicMock()
-        dummy_response_pdf.status_code = 200
+    xml = ET.fromstring("""
+    <article>
+        <front>
+            <article-meta>
+                <title-group>
+                    <article-title>Example Title</article-title>
+                </title-group>
+                <abstract><p>Example abstract text.</p></abstract>
+                <contrib-group>
+                    <contrib contrib-type="author">
+                        <name>
+                            <surname>Smith</surname>
+                            <given-names>Jane</given-names>
+                        </name>
+                    </contrib>
+                </contrib-group>
+                <pub-date><year>2024</year></pub-date>
+            </article-meta>
+        </front>
+    </article>
+    """)
+    mock_get.return_value.status_code = 200
 
-        mock_get.side_effect = [dummy_response_metadata, dummy_response_pdf]
+    result = retriever.extract_metadata({"data": xml}, "PMC123456")
+    assert result["Title"] == "Example Title"
+    assert "Jane Smith" in result["Authors"]
+    assert "Example abstract text." in result["Abstract"]
+    assert result["pdf_url"].startswith("http://example.org/PMC123456")
 
-        tool_call_id = "test_tool_id"
-        tool_input = {"paper_id": paper_id, "tool_call_id": tool_call_id}
-        result = download_pubmed_paper.run(tool_input)
-        update = result.update
 
-        self.assertIn("article_data", update)
-        self.assertIn(paper_id, update["article_data"])
-        metadata = update["article_data"][paper_id]
-        self.assertEqual(metadata["Title"], "Sample PubMed Title")
-        self.assertIn("John Doe", metadata["Authors"])
-        self.assertEqual(metadata["Abstract"], "This is a sample abstract.")
-        self.assertEqual(metadata["URL"], f"http://dummy.pubmed.org/pdf/{paper_id}?pdf=render")
+@patch("requests.get")
+def test_extract_metadata_no_pdf_found(mock_get, retriever):
+    # Covers extract_metadata when PDF URL not found (lines 42–49)
+    retriever.pdf_base_url = "http://example.org/"
+    xml = ET.fromstring("""
+    <article><front><article-meta><title-group><article-title>Title</article-title></title-group>
+    </article-meta></front></article>
+    """)
+    mock_get.return_value.status_code = 404  # PDF not found
 
-        messages = update["messages"]
-        self.assertTrue(len(messages) >= 1)
-        self.assertIsInstance(messages[0], ToolMessage)
-        self.assertIn(f"Successfully retrieved metadata for paper ID {paper_id}",messages[0].content)
+    result = retriever.extract_metadata({"data": xml}, "PMC123456")
+    assert result == {}
 
-    @patch(
-    "aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper.hydra.initialize"
+
+@patch("requests.get")
+def test_map_ids_success(mock_get, retriever):
+    # Covers map_ids (like lines 42–49 conceptually for ID mapping)
+    mock_response = MagicMock()
+    mock_response.text = """<eSummaryResult>
+        <record pmcid="PMC123456"></record>
+    </eSummaryResult>"""
+    mock_response.raise_for_status.return_value = None
+    mock_get.return_value = mock_response
+
+    pmc_id = retriever.map_ids("98765", "http://example.org/efetch")
+    assert pmc_id == "PMC123456"
+    mock_get.assert_called_once_with(
+        "http://example.org/efetch?ids=98765",
+        timeout=10
     )
-    @patch(
-    "aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper.hydra.compose"
-    )
-    @patch(
-    "aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper.requests.get"
-    )
-    def test_download_pubmed_paper_empty_metadata(self, mock_get, mock_compose, mock_initialize):
-        """Test case where the XML contains no article metadata."""
-        dummy_cfg = MagicMock()
-        dummy_cfg.tools.download_pubmed_paper.metadata_url = "http://dummy.pubmed.org/api"
-        dummy_cfg.tools.download_pubmed_paper.pdf_base_url = "http://dummy.pubmed.org/pdf/"
-        mock_compose.return_value = dummy_cfg
-        mock_initialize.return_value.__enter__.return_value = None
 
-        paper_id = "PMC999999"
 
-        # XML without expected metadata fields
-        dummy_xml = "<article><front></front></article>"
-        dummy_response_metadata = MagicMock()
-        dummy_response_metadata.text = dummy_xml
-        dummy_response_metadata.raise_for_status = MagicMock()
+@patch.object(DownloadPubmedPaperInput, "load_hydra_configs")
+@patch.object(DownloadPubmedPaperInput, "map_ids")
+@patch.object(DownloadPubmedPaperInput, "fetch_metadata")
+@patch.object(DownloadPubmedPaperInput, "extract_metadata")
+def test_paper_retriever_xml_root_none(
+    mock_extract, mock_fetch, mock_map, mock_load, retriever
+):
+    # Covers lines 127–129: skips if fetch_metadata returns None
+    mock_load.return_value = None
+    mock_map.return_value = "PMC123456"
+    mock_fetch.return_value = None  # Simulate XML fetch fail
+    mock_extract.return_value = {"dummy": "data"}
 
-        dummy_response_pdf = MagicMock()
-        dummy_response_pdf.status_code = 200
+    result = retriever.paper_retriever(["pubmed:98765"])
+    assert result["article_data"] == {}
+    mock_extract.assert_not_called()
 
-        mock_get.side_effect = [dummy_response_metadata, dummy_response_pdf]
+@patch.object(DownloadPubmedPaperInput, "load_hydra_configs")
+@patch.object(DownloadPubmedPaperInput, "map_ids")
+@patch.object(DownloadPubmedPaperInput, "fetch_metadata")
+@patch.object(DownloadPubmedPaperInput, "extract_metadata")
+def test_paper_retriever_pubmed_branch_maps_id_and_extracts(
+    mock_extract, mock_fetch, mock_map, mock_load, retriever
+):
+    """
+    Covers:
+      - `if pre == "pubmed"` -> map_ids() called.
+      - extract_metadata is called.
+      - article_data populated.
+    """
+    mock_load.return_value = None
+    mock_map.return_value = "PMC123456"
+    mock_fetch.return_value = {"data": "xml_data"}
+    mock_extract.return_value = {"Title": "My Paper"}
 
-        tool_call_id = "test_tool_id"
-        tool_input = {"paper_id": paper_id, "tool_call_id": tool_call_id}
+    result = retriever.paper_retriever(["pubmed:98765"])
+    assert "PMC123456" in result["article_data"]
+    assert result["article_data"]["PMC123456"]["Title"] == "My Paper"
+    mock_map.assert_called_once_with("98765", retriever.map_url)
+    mock_fetch.assert_called_once_with(retriever.metadata_url, "PMC123456")
+    mock_extract.assert_called_once_with({"data": "xml_data"}, "PMC123456")
 
-        result = download_pubmed_paper.run(tool_input)
-        update = result.update
-        metadata = update["article_data"][paper_id]
 
-        self.assertEqual(metadata["Title"], "")
-        self.assertEqual(metadata["Authors"], "")
-        self.assertEqual(metadata["Abstract"], "")
-        self.assertEqual(metadata["Publication Date"], "")
-        self.assertEqual(metadata["pdf_url"], f"http://dummy.pubmed.org/pdf/{paper_id}?pdf=render")
+@patch.object(DownloadPubmedPaperInput, "load_hydra_configs")
+@patch.object(DownloadPubmedPaperInput, "fetch_metadata")
+@patch.object(DownloadPubmedPaperInput, "extract_metadata")
+def test_paper_retriever_else_branch_uses_pid_directly_and_extracts(
+    mock_extract, mock_fetch, mock_load, retriever
+):
+    """
+    Covers:
+      - `else` branch when pre != pubmed.
+      - Does not call map_ids.
+      - Uses pid directly.
+      - extract_metadata is called.
+    """
+    mock_load.return_value = None
+    mock_fetch.return_value = {"data": "xml_data"}
+    mock_extract.return_value = {"Title": "Non-PubMed Paper"}
 
-    @patch(
-    "aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper.hydra.initialize"
-    )
-    @patch(
-    "aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper.hydra.compose"
-    )
-    @patch(
-    "aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper.requests.get"
-    )
-    def test_pdf_not_found(self, mock_get, mock_compose, mock_initialize):
-        """Test the case when the PDF cannot be retrieved."""
-        dummy_cfg = MagicMock()
-        dummy_cfg.tools.download_pubmed_paper.metadata_url = "http://dummy.pubmed.org/api"
-        dummy_cfg.tools.download_pubmed_paper.pdf_base_url = "http://dummy.pubmed.org/pdf/"
-        mock_compose.return_value = dummy_cfg
-        mock_initialize.return_value.__enter__.return_value = None
+    result = retriever.paper_retriever(["pmcid:PMC123456"])
+    assert "PMC123456" in result["article_data"]
+    assert result["article_data"]["PMC123456"]["Title"] == "Non-PubMed Paper"
+    mock_fetch.assert_called_once_with(retriever.metadata_url, "PMC123456")
+    mock_extract.assert_called_once_with({"data": "xml_data"}, "PMC123456")
 
-        paper_id = "PMC123456"
 
-        dummy_xml = """
-        <article>
-            <front>
-                <article-meta>
-                    <title-group>
-                        <article-title>Sample PubMed Title</article-title>
-                    </title-group>
-                </article-meta>
-            </front>
-        </article>
-        """
-        dummy_response_metadata = MagicMock()
-        dummy_response_metadata.text = dummy_xml
-        dummy_response_metadata.raise_for_status = MagicMock()
+@patch.object(DownloadPubmedPaperInput, "load_hydra_configs")
+@patch.object(DownloadPubmedPaperInput, "map_ids")
+@patch.object(DownloadPubmedPaperInput, "fetch_metadata")
+@patch.object(DownloadPubmedPaperInput, "extract_metadata")
+def test_paper_retriever_skips_when_paper_id_none(
+    mock_extract, mock_fetch, mock_map, mock_load, retriever
+):
+    """
+    Covers:
+      - `if paper_id == None` skip.
+      - extract_metadata not called.
+    """
+    mock_load.return_value = None
+    mock_map.return_value = None  # Simulate map_ids failed.
+    result = retriever.paper_retriever(["pubmed:98765"])
 
-        dummy_response_pdf = MagicMock()
-        dummy_response_pdf.status_code = 404
-
-        mock_get.side_effect = [dummy_response_metadata, dummy_response_pdf]
-
-        tool_call_id = "test_tool_id"
-        tool_input = {"paper_id": paper_id, "tool_call_id": tool_call_id}
-
-        with self.assertRaises(RuntimeError) as context:
-            download_pubmed_paper.run(tool_input)
-
-        self.assertIn("No PDF found or access denied", str(context.exception))
-
-    @patch(
-    "aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper.hydra.initialize"
-    )
-    @patch(
-    "aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper.hydra.compose"
-    )
-    @patch(
-    "aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_paper.requests.get"
-    )
-    def test_download_with_mapping_to_pmc_id(self, mock_get, mock_compose, mock_initialize):
-        """Test case where the id cannot be mapped to pmc id."""
-        # Dummy config
-        dummy_cfg = MagicMock()
-        dummy_cfg.tools.download_pubmed_paper.metadata_url = "http://dummy.pubmed.org/api"
-        dummy_cfg.tools.download_pubmed_paper.pdf_base_url = "http://dummy.pubmed.org/pdf/"
-        dummy_cfg.tools.download_pubmed_paper.map_url = "http://dummy.pubmed.org/map"
-        mock_compose.return_value = dummy_cfg
-        mock_initialize.return_value.__enter__.return_value = None
-
-        # Input for successful mapping
-        non_pmc_input_id = "10.1000/test-doi"
-        resolved_pmc_id = "PMC123456"
-
-        # --- Mock `map_ids` XML response ---
-        dummy_map_response = MagicMock()
-        dummy_map_response.status_code = 200
-        dummy_map_response.text = f"""
-        <eSummaryResult>
-            <record pmcid="{resolved_pmc_id}"/>
-        </eSummaryResult>
-        """
-
-        # --- Mock metadata XML response ---
-        dummy_metadata_response = MagicMock()
-        dummy_metadata_response.status_code = 200
-        dummy_metadata_response.text = """
-        <article>
-            <front>
-                <article-meta>
-                    <title-group>
-                        <article-title>Mapped Paper Title</article-title>
-                    </title-group>
-                    <abstract>Mapped abstract here</abstract>
-                    <contrib-group>
-                        <contrib contrib-type="author">
-                            <name>
-                                <given-names>Jane</given-names>
-                                <surname>Smith</surname>
-                            </name>
-                        </contrib>
-                    </contrib-group>
-                    <pub-date><year>2022</year></pub-date>
-                </article-meta>
-            </front>
-        </article>
-        """
-
-        # --- Mock PDF availability check ---
-        dummy_pdf_response = MagicMock()
-        dummy_pdf_response.status_code = 200
-
-        # --- CASE 1: Success path ---
-        mock_get.side_effect = [
-            dummy_map_response,          # map_ids
-            dummy_metadata_response,     # fetch_metadata
-            dummy_pdf_response           # PDF check
-        ]
-
-        result = download_pubmed_paper.run(
-            {"paper_id": non_pmc_input_id,
-            "tool_call_id": "mock_tool_id"}
-        )
-
-        metadata = result.update["article_data"][non_pmc_input_id]
-        self.assertEqual(metadata["Title"], "Mapped Paper Title")
-        self.assertEqual(metadata["Abstract"], "Mapped abstract here")
-        self.assertIn("Jane Smith", metadata["Authors"])
-        self.assertEqual(metadata["Publication Date"], "")
-        self.assertTrue(metadata["URL"].startswith("http://dummy.pubmed.org/pdf/PMC123456"))
-
-        # --- CASE 2: Mapping fails — test RuntimeError ---
-        failed_map_response = MagicMock()
-        failed_map_response.status_code = 200
-        failed_map_response.text = """
-        <eSummaryResult>
-            <!-- No record with pmcid -->
-        </eSummaryResult>
-        """
-
-        mock_get.side_effect = [failed_map_response]
-
-        with self.assertRaises(RuntimeError) as context:
-            download_pubmed_paper.run(
-                {"paper_id": "10.1000/unknown-doi",
-                "tool_call_id": "mock_tool_id"}
-            )
-        self.assertIn("PMC id not found for 10.1000/unknown-doi", str(context.exception))
+    assert result["article_data"] == {}
+    mock_map.assert_called_once_with("98765", retriever.map_url)
+    mock_fetch.assert_not_called()
+    mock_extract.assert_not_called()

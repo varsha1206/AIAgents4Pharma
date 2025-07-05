@@ -53,6 +53,8 @@ class DownloadMedrxivPaperInput(BasePaperRetriever):
         response = requests.get(api_url, timeout=self.request_timeout)
         response.raise_for_status()
         information = response.json()
+        if not information.get("collection"):
+            raise ValueError(f"No metadata found for DOI: {clean_doi}")
         return information["collection"][0]
    
     def extract_metadata(self,data: dict,paper_id: str) -> dict:
@@ -67,8 +69,9 @@ class DownloadMedrxivPaperInput(BasePaperRetriever):
         doi_suffix = data.get("doi", "").split("10.1101/")[-1]
         pdf_url = f"https://www.medrxiv.org/content/10.1101/{doi_suffix}.full.pdf"
         logger.info("PDF URL: %s", pdf_url)
-        if not pdf_url:
-            raise ValueError(f"No PDF URL found for DOI: {paper_id}")
+        if requests.get(pdf_url,timeout=self.request_timeout).status_code != 200:
+            print(f"No PDF found or access denied at {pdf_url}")
+            return {}
         return {
             "Title": title,
             "Authors": authors,
@@ -102,12 +105,17 @@ class DownloadMedrxivPaperInput(BasePaperRetriever):
             logger.info("Processing DOI: %s", doi)
             # Fetch metadata
             entry = self.fetch_metadata(api_url,doi)
-            if entry is None:
-                logger.warning("No entry found for MedRxiv ID %s", doi)
-                continue
             # Extract relevant metadata
-            article_data[doi] = self.extract_metadata(entry, doi)
-   
+            metadata = self.extract_metadata(entry, doi)
+
+            if metadata:
+                article_data[doi]=metadata
+                logger.info("Metadata fetched for %s",doi)
+            else:
+                logger.info("PDF could not be accessed")
+                continue
+
+        logger.info("Succesfully ran the biorxiv tool")
         return {
             "article_data": article_data
         }
