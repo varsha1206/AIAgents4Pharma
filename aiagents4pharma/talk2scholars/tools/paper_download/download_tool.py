@@ -46,6 +46,7 @@ class DownloadSourceDetermination(BaseModel):
     )
 
 class DownloadPaperInput(BaseModel):
+    """Input Schema to paper download tool"""
     paper_id: List[str] = Field(
         description="List of paper ids (e.g., arXiv ID, DOIs)")
     tool_call_id: Annotated[str, InjectedToolCallId]
@@ -76,24 +77,18 @@ def download_paper(
     if arxiv_ids:
         logger.info("Getting into arxiv")
         retriever = DownloadArxivPaperInput()
-        try:
-            arxiv_cmd =  retriever.paper_retriever(paper_ids=arxiv_ids)
-            if arxiv_cmd:
-                all_article_data.update(arxiv_cmd["article_data"])
-                logger.info("Recieved papers from arxiv")
-        except Exception as e:
-            print("Arxiv:",e)
-    
+        arxiv_cmd =  retriever.paper_retriever(paper_ids=arxiv_ids)
+        if arxiv_cmd:
+            all_article_data.update(arxiv_cmd["article_data"])
+            logger.info("Recieved papers from arxiv")
+
     if pubmed_ids:
         logger.info("Getting into Pubmed")
         retriever = DownloadPubmedPaperInput()
-        try:
-            pubmed_cmd = retriever.paper_retriever(paper_ids=pubmed_ids)
-            if pubmed_cmd:
-                all_article_data.update(pubmed_cmd["article_data"])
-                logger.info("Recieved papers from pubmed")
-        except Exception as e:
-            print("Pubmed:",e)
+        pubmed_cmd = retriever.paper_retriever(paper_ids=pubmed_ids)
+        if pubmed_cmd:
+            all_article_data.update(pubmed_cmd["article_data"])
+            logger.info("Recieved papers from pubmed")
 
     if dois:
         try:
@@ -101,22 +96,20 @@ def download_paper(
             retriever = DownloadBiorxivPaperInput()
             doi_cmd =  retriever.paper_retriever(paper_ids=dois)
             logger.info("Recieved papers from bioarxiv")
-        except Exception:
+        except ValueError:
             logger.info("Getting into medrxiv")
             retriever = DownloadMedrxivPaperInput()
             doi_cmd = retriever.paper_retriever(paper_ids=dois)
             logger.info("Recieved papers from medarxiv")
-        try:
-            if doi_cmd:
-                all_article_data.update(doi_cmd["article_data"])
-        except Exception as e:
-            print("BIOMED:",e)
+
+        if doi_cmd:
+            all_article_data.update(doi_cmd["article_data"])
 
     content = build_summary(all_article_data)
 
     logger.info("Download tool run completed")
     logger.info("Final ToolMessages: %s", content)
-    
+
     return Command(
         update = {
             "article_data": all_article_data,
@@ -129,4 +122,3 @@ def download_paper(
         ],
         }
     )
- 

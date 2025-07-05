@@ -4,18 +4,16 @@ Tool for downloading MedRxiv paper metadata and retrieving the PDF URL.
 """
 
 import logging
-from typing import Annotated, Any, List
+from typing import Any, List
 
 import hydra
 import requests
-
-from langchain_core.tools.base import InjectedToolCallId
 
 from .base_retreiver import BasePaperRetriever
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__) 
+logger = logging.getLogger(__name__)
 
 class DownloadMedrxivPaperInput(BasePaperRetriever):
     """Input schema for the MedRxiv paper download tool."""
@@ -32,7 +30,7 @@ class DownloadMedrxivPaperInput(BasePaperRetriever):
                 config_name="config", overrides=["tools/download_medrxiv_paper=default"]
             )
         return cfg.tools.download_medrxiv_paper
-   
+
     def fetch_metadata(
             self, url: str, paper_id: str
             ) -> dict:
@@ -47,16 +45,16 @@ class DownloadMedrxivPaperInput(BasePaperRetriever):
         """
         # Strip any version suffix (e.g., v1) since MedRxiv's API is version-sensitive
         clean_doi = paper_id.split("v")[0]
-   
+
         api_url = f"{url}{clean_doi}"
         logger.info("Fetching metadata from api url: %s", api_url)
         response = requests.get(api_url, timeout=self.request_timeout)
         response.raise_for_status()
         information = response.json()
-        if not information.get("collection"):
+        if not information["collection"]:
             raise ValueError(f"No metadata found for DOI: {clean_doi}")
         return information["collection"][0]
-   
+
     def extract_metadata(self,data: dict,paper_id: str) -> dict:
         """
         Extract relevant metadata fields from a MedRxiv paper entry.
@@ -83,7 +81,7 @@ class DownloadMedrxivPaperInput(BasePaperRetriever):
             "source": "medrxiv",
             "medrxiv_id": paper_id
         }
-   
+
     def paper_retriever(
         self,
         paper_ids: List[str]
@@ -92,12 +90,12 @@ class DownloadMedrxivPaperInput(BasePaperRetriever):
         Get metadata and PDF URLs for one or more MedRxiv papers using their unique dois.
         """
         logger.info("Fetching metadata from medrxiv for paper IDs: %s", paper_ids)
-   
+
         # Load configuration
         config = self.load_hydra_configs()
         api_url = config.api_url
         self.request_timeout = config.request_timeout
-   
+
         # Aggregate results
         article_data: dict[str, Any] = {}
         for doi in paper_ids:

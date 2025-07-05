@@ -6,12 +6,14 @@ Unit tests for Medrxiv paper downloading functionality, including:
 import unittest
 from unittest.mock import MagicMock, patch
 
-from aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input import DownloadMedrxivPaperInput
+from aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input import (
+    DownloadMedrxivPaperInput)
 
+PATH = "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input"
 class TestDownloadMedrxivPaper(unittest.TestCase):
     """Tests for the download_medRxiv_paper tool."""
     @patch(
-    "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.hydra.initialize"
+    f"{PATH}.hydra.initialize"
     )
     @patch(
     "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.hydra.compose"
@@ -28,7 +30,7 @@ class TestDownloadMedrxivPaper(unittest.TestCase):
 
         # Fake config structure
         mock_cfg = MagicMock()
-        mock_cfg.tools.download_medrxiv_paper.api_url = "https://api"
+        mock_cfg.tools.download_medrxiv_paper.request_timeout = 10
         mock_compose.return_value = mock_cfg
 
         retriever.load_hydra_configs()
@@ -39,10 +41,10 @@ class TestDownloadMedrxivPaper(unittest.TestCase):
             overrides=["tools/download_medrxiv_paper=default"]
         )
 
-        assert retriever.api_url == "https://api"
+        assert retriever.request_timeout == 10
 
     @patch(
-        "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.DownloadMedrxivPaperInput.load_hydra_configs"
+        f"{PATH}.DownloadMedrxivPaperInput.load_hydra_configs"
     )
     @patch("requests.get")
     def test_download_medrxiv_paper_success(self, mock_get, mock_load_hydra):
@@ -89,7 +91,7 @@ class TestDownloadMedrxivPaper(unittest.TestCase):
         self.assertEqual(metadata["medrxiv_id"], doi)
 
     @patch(
-        "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.DownloadMedrxivPaperInput.load_hydra_configs"
+        f"{PATH}.DownloadMedrxivPaperInput.load_hydra_configs"
     )
     @patch("requests.get")
     def test_no_entry_found(self, mock_get, mock_load_hydra):
@@ -115,7 +117,7 @@ class TestDownloadMedrxivPaper(unittest.TestCase):
         self.assertEqual(str(context.exception), f"No metadata found for DOI: {doi}")
 
     @patch(
-        "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.DownloadMedrxivPaperInput.load_hydra_configs"
+        f"{PATH}.DownloadMedrxivPaperInput.load_hydra_configs"
     )
     @patch("requests.get")
     def test_no_pdf_url_found(self, mock_get, mock_load_hydra):
@@ -156,7 +158,7 @@ class TestDownloadMedrxivPaper(unittest.TestCase):
         self.assertEqual(metadata["URL"], expected_url)
 
     @patch(
-        "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.DownloadMedrxivPaperInput.load_hydra_configs"
+        f"{PATH}.DownloadMedrxivPaperInput.load_hydra_configs"
     )
     @patch("requests.get")
     def test_extract_metadata_pdf_not_found(self, mock_get, mock_load_hydra):
@@ -184,12 +186,12 @@ class TestDownloadMedrxivPaper(unittest.TestCase):
 
         # First GET returns metadata, second GET (PDF link) returns 404
         def side_effect(url, timeout):
+            timeout+=1
             if "api" in url:
                 return metadata_response
-            else:
-                pdf_response = MagicMock()
-                pdf_response.status_code = 404  # Simulate PDF link not found
-                return pdf_response
+            pdf_response = MagicMock()
+            pdf_response.status_code = 404  # Simulate PDF link not found
+            return pdf_response
 
         mock_get.side_effect = side_effect
 
@@ -202,9 +204,9 @@ class TestDownloadMedrxivPaper(unittest.TestCase):
         self.assertNotIn(doi, update["article_data"])
 
     @patch(
-        "aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.DownloadMedrxivPaperInput.load_hydra_configs"
+    f"{PATH}.DownloadMedrxivPaperInput.load_hydra_configs"
     )
-    @patch("aiagents4pharma.talk2scholars.tools.paper_download.download_medrxiv_input.DownloadMedrxivPaperInput.extract_metadata")
+    @patch(f"{PATH}.DownloadMedrxivPaperInput.extract_metadata")
     @patch("requests.get")
     def test_paper_retriever_else_branch(self, mock_get, mock_extract_metadata, mock_load_hydra):
         """Test paper_retriever hits 'else' branch when extract_metadata returns empty dict."""
@@ -240,4 +242,3 @@ class TestDownloadMedrxivPaper(unittest.TestCase):
 
         # 'article_data' should not contain DOI because metadata is empty
         self.assertNotIn(doi, update["article_data"])
-

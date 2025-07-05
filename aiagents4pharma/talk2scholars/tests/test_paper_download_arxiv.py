@@ -2,19 +2,19 @@
 Unit tests for arXiv paper downloading functionality, including:
 - download_arxiv_paper tool function.
 """
-
 import unittest
 from unittest.mock import MagicMock, patch
 
-from aiagents4pharma.talk2scholars.tools.paper_download.download_arxiv_input import DownloadArxivPaperInput
+from aiagents4pharma.talk2scholars.tools.paper_download.download_arxiv_input import (
+    DownloadArxivPaperInput
+)
 
-
+PATH="""
+aiagents4pharma.talk2scholars.tools.paper_download.download_arxiv_input.DownloadArxivPaperInput"""
 class TestDownloadArxivPaper(unittest.TestCase):
     """tests for the download_arxiv_paper tool.""" 
-
     @patch("requests.get")
-    @patch(
-"aiagents4pharma.talk2scholars.tools.paper_download.download_arxiv_input.DownloadArxivPaperInput.load_hydra_configs"
+    @patch(f"{PATH}.load_hydra_configs"
     )
     def test_download_arxiv_paper_success(
         self, mock_load_hydra_configs,mock_get
@@ -64,7 +64,7 @@ class TestDownloadArxivPaper(unittest.TestCase):
 
     @patch("requests.get")
     @patch(
-    "aiagents4pharma.talk2scholars.tools.paper_download.download_arxiv_input.DownloadArxivPaperInput.load_hydra_configs"
+    f"{PATH}.load_hydra_configs"
     )
     def test_no_entry_found(self, mock_load_hydra_configs,mock_get):
         """test the download_arxiv_paper tool for no entry found in XML response."""
@@ -93,7 +93,7 @@ class TestDownloadArxivPaper(unittest.TestCase):
 
     @patch("requests.get")
     @patch(
-    "aiagents4pharma.talk2scholars.tools.paper_download.download_arxiv_input.DownloadArxivPaperInput.load_hydra_configs"
+    f"{PATH}.load_hydra_configs"
     )
     def test_no_pdf_url_found(self, mock_load_hydra_configs, mock_get):
         """test the download_arxiv_paper tool for no PDF URL found in XML response."""

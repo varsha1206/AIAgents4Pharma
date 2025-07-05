@@ -2,19 +2,18 @@
 """
 Tool for downloading bioRxiv paper metadata and retrieving the PDF URL.
 """
- 
+
 import logging
-from typing import Annotated, Any, List
+from typing import Any, List
 
 import hydra
 import requests
-from langchain_core.tools.base import InjectedToolCallId
 
 from .base_retreiver import BasePaperRetriever
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__) 
+logger = logging.getLogger(__name__)
 
 class DownloadBiorxivPaperInput(BasePaperRetriever):
     """Input schema for the bioRxiv paper download tool."""
@@ -30,7 +29,7 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
                 config_name="config", overrides=["tools/download_biorxiv_paper=default"]
             )
         return cfg.tools.download_biorxiv_paper
-   
+
     def fetch_metadata(
             self, url: str, paper_id: str
             ) -> dict:
@@ -45,16 +44,16 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
         """
         # Strip any version suffix (e.g., v1) since bioRxiv's API is version-sensitive
         clean_doi = paper_id.split("v")[0]
-   
+
         a_url = f"{url}{clean_doi}"
         logger.info("Fetching metadata from api url: %s", a_url)
         response = requests.get(a_url, timeout=self.request_timeout)
         response.raise_for_status()
         information = response.json()
-        if not information.get("collection"):
+        if not information["collection"]:
             raise ValueError(f"No metadata found for DOI: {clean_doi}")
         return information["collection"][0]
-  
+
     def extract_metadata(self,data: dict,paper_id: str) -> dict:
         """
         Extract relevant metadata fields from a bioRxiv paper entry.
@@ -68,7 +67,7 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
         pdf_url = f"https://www.biorxiv.org/content/10.1101/{doi_suffix}.full.pdf"
         if requests.get(pdf_url,timeout=self.request_timeout).status_code != 200:
             print(f"No PDF found or access denied at {pdf_url}")
-            return {}
+            raise ValueError("Pdf not accessible")
         logger.info("PDF URL: %s", pdf_url)
         return {
             "Title": title,
@@ -81,7 +80,7 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
             "source": "biorxiv",
             "biorxiv_id": paper_id
         }
-  
+
     def paper_retriever(
         self,
         paper_ids: List[str]
@@ -90,12 +89,12 @@ class DownloadBiorxivPaperInput(BasePaperRetriever):
         Get metadata and PDF URLs for one or more bioRxiv papers using their unique dois.
         """
         logger.info("Fetching metadata from biorxiv for paper IDs: %s", paper_ids)
-   
+
         # Load configuration
         config = self.load_hydra_configs()
         api_url = config.api_url
         self.request_timeout = config.request_timeout
-   
+
         # Aggregate results
         article_data: dict[str, Any] = {}
         for doi in paper_ids:

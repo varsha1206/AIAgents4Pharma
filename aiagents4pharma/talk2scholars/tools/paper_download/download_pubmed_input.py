@@ -3,13 +3,11 @@
 Functionality for downloading PubMedX paper metadata and retrieving the PDF URL.
 """
 
-import logging
-import requests
 import xml.etree.ElementTree as ET
-from typing import Annotated, Any, List
-
+import logging
+from typing import Any, List
+import requests
 import hydra
-from langchain_core.tools.base import InjectedToolCallId
 
 from .base_retreiver import BasePaperRetriever
 
@@ -63,7 +61,7 @@ class DownloadPubmedPaperInput(BasePaperRetriever):
         abstract = "".join(abstract_elem.itertext()).strip() if abstract_elem is not None else ""
 
         authors = ", ".join(
-            f"{name.findtext('given-names', default='')} {name.findtext('surname', default='')}".strip()
+f"{name.findtext('given-names', default='')} {name.findtext('surname', default='')}".strip()
             for contrib in xml_root.findall('.//contrib[@contrib-type="author"]')
             if (name := contrib.find("name")) is not None
         ) or ""
@@ -73,7 +71,7 @@ class DownloadPubmedPaperInput(BasePaperRetriever):
 
         pdf_url = f"{self.pdf_base_url}{paper_id}?pdf=render"
         if requests.get(pdf_url, timeout=10).status_code != 200:
-            logger.info(f"No PDF found or access denied at {pdf_url}")
+            logger.info("No PDF found or access denied at %s",pdf_url)
             return {}
 
         return {
@@ -87,7 +85,7 @@ class DownloadPubmedPaperInput(BasePaperRetriever):
             "source": "pubmed",
             "pmc_id": paper_id,
         }
-   
+
     def map_ids(self, input_id: str, map_url: str) -> str:
         """Mapping the PM ID or DOI of paper in order to get the PMC ID"""
         response = requests.get(f"{map_url}?ids={input_id}", timeout=10)
@@ -95,14 +93,14 @@ class DownloadPubmedPaperInput(BasePaperRetriever):
         root = ET.fromstring(response.text)
         pmc_id = None
         if (
-            (record := root.find("record")) is not None 
+            (record := root.find("record")) is not None
             and record.attrib.get("pmcid")
             ):
             logger.info("Retrieved PMC ID for the given id %s", input_id)
             pmc_id =  record.attrib["pmcid"]
         if pmc_id is not None:
             logger.info("Found pmc id %s",pmc_id)
-        return pmc_id 
+        return pmc_id
 
     def paper_retriever(
         self,
@@ -124,7 +122,7 @@ class DownloadPubmedPaperInput(BasePaperRetriever):
                 paper_id = self.map_ids(pid, self.map_url)
             else:
                 paper_id = pid
-            if paper_id == None:
+            if paper_id is None:
                 logger.info("PMC ID not available for %s",paper_id)
                 continue
             # Fetch and parse metadata

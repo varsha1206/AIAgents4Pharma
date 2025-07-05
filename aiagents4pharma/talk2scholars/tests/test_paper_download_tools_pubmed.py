@@ -2,15 +2,11 @@
 Unit tests for pubmed paper downloading functionality, including:
 - download_pubmed_paper tool function.
 """
-import pytest
 from unittest.mock import patch, MagicMock
 import xml.etree.ElementTree as ET
 
-from aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_input import DownloadPubmedPaperInput
-
-@pytest.fixture
-def retriever():
-    return DownloadPubmedPaperInput()
+from aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_input import (
+    DownloadPubmedPaperInput)
 
 @patch(
 "aiagents4pharma.talk2scholars.tools.paper_download.download_pubmed_input.hydra.initialize"
@@ -26,7 +22,6 @@ def test_load_hydra_configs_runs_and_sets_attributes(mock_compose, mock_initiali
     - hydra.compose runs
     - self.metadata_url etc. get set
     """
-    retriever = DownloadPubmedPaperInput()
 
     # Fake config structure
     mock_cfg = MagicMock()
@@ -35,6 +30,7 @@ def test_load_hydra_configs_runs_and_sets_attributes(mock_compose, mock_initiali
     mock_cfg.tools.download_pubmed_paper.map_url = "https://map"
     mock_compose.return_value = mock_cfg
 
+    retriever = DownloadPubmedPaperInput()
     retriever.load_hydra_configs()
 
     mock_initialize.assert_called_once_with(version_base=None, config_path="../../configs")
@@ -48,13 +44,15 @@ def test_load_hydra_configs_runs_and_sets_attributes(mock_compose, mock_initiali
     assert retriever.map_url == "https://map"
 
 @patch("requests.get")
-def test_fetch_metadata_success(mock_get, retriever):
+def test_fetch_metadata_success(mock_get):
+    """Pubmed happy run"""
     # Covers fetch_metadata (lines 27–34)
     mock_response = MagicMock()
     mock_response.text = "<foo>bar</foo>"
     mock_response.raise_for_status.return_value = None
     mock_get.return_value = mock_response
 
+    retriever = DownloadPubmedPaperInput()
     result = retriever.fetch_metadata("http://example.org", "123")
     assert "data" in result
     assert isinstance(result["data"], ET.Element)
@@ -66,8 +64,9 @@ def test_fetch_metadata_success(mock_get, retriever):
 
 
 @patch("requests.get")
-def test_extract_metadata_success_pdf_found(mock_get, retriever):
-    # Covers extract_metadata success path (lines 42–49)
+def test_extract_metadata_success_pdf_found(mock_get):
+    """Covers extract_metadata success path (lines 42 to 49)"""
+    retriever = DownloadPubmedPaperInput()
     retriever.pdf_base_url = "http://example.org/"
 
     xml = ET.fromstring("""
@@ -101,8 +100,9 @@ def test_extract_metadata_success_pdf_found(mock_get, retriever):
 
 
 @patch("requests.get")
-def test_extract_metadata_no_pdf_found(mock_get, retriever):
-    # Covers extract_metadata when PDF URL not found (lines 42–49)
+def test_extract_metadata_no_pdf_found(mock_get):
+    """Covers extract_metadata when PDF URL not found (lines 42to49)"""
+    retriever = DownloadPubmedPaperInput()
     retriever.pdf_base_url = "http://example.org/"
     xml = ET.fromstring("""
     <article><front><article-meta><title-group><article-title>Title</article-title></title-group>
@@ -111,12 +111,12 @@ def test_extract_metadata_no_pdf_found(mock_get, retriever):
     mock_get.return_value.status_code = 404  # PDF not found
 
     result = retriever.extract_metadata({"data": xml}, "PMC123456")
-    assert result == {}
-
+    assert not result
 
 @patch("requests.get")
-def test_map_ids_success(mock_get, retriever):
-    # Covers map_ids (like lines 42–49 conceptually for ID mapping)
+def test_map_ids_success(mock_get):
+    """Map ids success"""
+    retriever = DownloadPubmedPaperInput()
     mock_response = MagicMock()
     mock_response.text = """<eSummaryResult>
         <record pmcid="PMC123456"></record>
@@ -137,16 +137,18 @@ def test_map_ids_success(mock_get, retriever):
 @patch.object(DownloadPubmedPaperInput, "fetch_metadata")
 @patch.object(DownloadPubmedPaperInput, "extract_metadata")
 def test_paper_retriever_xml_root_none(
-    mock_extract, mock_fetch, mock_map, mock_load, retriever
+    mock_extract, mock_fetch, mock_map, mock_load
 ):
+    """Fetch data returns none"""
     # Covers lines 127–129: skips if fetch_metadata returns None
     mock_load.return_value = None
     mock_map.return_value = "PMC123456"
     mock_fetch.return_value = None  # Simulate XML fetch fail
     mock_extract.return_value = {"dummy": "data"}
 
+    retriever = DownloadPubmedPaperInput()
     result = retriever.paper_retriever(["pubmed:98765"])
-    assert result["article_data"] == {}
+    assert not result["article_data"]
     mock_extract.assert_not_called()
 
 @patch.object(DownloadPubmedPaperInput, "load_hydra_configs")
@@ -154,7 +156,7 @@ def test_paper_retriever_xml_root_none(
 @patch.object(DownloadPubmedPaperInput, "fetch_metadata")
 @patch.object(DownloadPubmedPaperInput, "extract_metadata")
 def test_paper_retriever_pubmed_branch_maps_id_and_extracts(
-    mock_extract, mock_fetch, mock_map, mock_load, retriever
+    mock_extract, mock_fetch, mock_map, mock_load
 ):
     """
     Covers:
@@ -167,6 +169,7 @@ def test_paper_retriever_pubmed_branch_maps_id_and_extracts(
     mock_fetch.return_value = {"data": "xml_data"}
     mock_extract.return_value = {"Title": "My Paper"}
 
+    retriever = DownloadPubmedPaperInput()
     result = retriever.paper_retriever(["pubmed:98765"])
     assert "PMC123456" in result["article_data"]
     assert result["article_data"]["PMC123456"]["Title"] == "My Paper"
@@ -179,7 +182,7 @@ def test_paper_retriever_pubmed_branch_maps_id_and_extracts(
 @patch.object(DownloadPubmedPaperInput, "fetch_metadata")
 @patch.object(DownloadPubmedPaperInput, "extract_metadata")
 def test_paper_retriever_else_branch_uses_pid_directly_and_extracts(
-    mock_extract, mock_fetch, mock_load, retriever
+    mock_extract, mock_fetch, mock_load
 ):
     """
     Covers:
@@ -192,6 +195,7 @@ def test_paper_retriever_else_branch_uses_pid_directly_and_extracts(
     mock_fetch.return_value = {"data": "xml_data"}
     mock_extract.return_value = {"Title": "Non-PubMed Paper"}
 
+    retriever = DownloadPubmedPaperInput()
     result = retriever.paper_retriever(["pmcid:PMC123456"])
     assert "PMC123456" in result["article_data"]
     assert result["article_data"]["PMC123456"]["Title"] == "Non-PubMed Paper"
@@ -204,7 +208,7 @@ def test_paper_retriever_else_branch_uses_pid_directly_and_extracts(
 @patch.object(DownloadPubmedPaperInput, "fetch_metadata")
 @patch.object(DownloadPubmedPaperInput, "extract_metadata")
 def test_paper_retriever_skips_when_paper_id_none(
-    mock_extract, mock_fetch, mock_map, mock_load, retriever
+    mock_extract, mock_fetch, mock_map, mock_load
 ):
     """
     Covers:
@@ -213,9 +217,10 @@ def test_paper_retriever_skips_when_paper_id_none(
     """
     mock_load.return_value = None
     mock_map.return_value = None  # Simulate map_ids failed.
+    retriever = DownloadPubmedPaperInput()
     result = retriever.paper_retriever(["pubmed:98765"])
 
-    assert result["article_data"] == {}
+    assert not result["article_data"]
     mock_map.assert_called_once_with("98765", retriever.map_url)
     mock_fetch.assert_not_called()
     mock_extract.assert_not_called()

@@ -5,17 +5,18 @@ Unit tests for bioRxiv paper downloading functionality, including:
 
 import unittest
 from unittest.mock import MagicMock, patch
-from langchain_core.messages import ToolMessage
 
-from aiagents4pharma.talk2scholars.tools.paper_download.download_biorxiv_input import DownloadBiorxivPaperInput
+from aiagents4pharma.talk2scholars.tools.paper_download.download_biorxiv_input import (
+    DownloadBiorxivPaperInput)
 
+PATH = "aiagents4pharma.talk2scholars.tools.paper_download.download_biorxiv_input"
 class TestDownloadBiorxivPaper(unittest.TestCase):
     """Tests for the download_bioRxiv_paper tool."""
     @patch(
-    "aiagents4pharma.talk2scholars.tools.paper_download.download_biorxiv_input.hydra.initialize"
+    f"{PATH}.hydra.initialize"
     )
     @patch(
-    "aiagents4pharma.talk2scholars.tools.paper_download.download_biorxiv_input.hydra.compose"
+    f"{PATH}.hydra.compose"
     )
     def test_load_hydra_configs_runs_and_sets_attributes(self,mock_compose, mock_initialize):
         """
@@ -29,7 +30,7 @@ class TestDownloadBiorxivPaper(unittest.TestCase):
 
         # Fake config structure
         mock_cfg = MagicMock()
-        mock_cfg.tools.download_biorxiv_paper.api_url = "https://api"
+        mock_cfg.tools.download_biorxiv_paper.request_timeout = 10
         mock_compose.return_value = mock_cfg
 
         retriever.load_hydra_configs()
@@ -40,9 +41,9 @@ class TestDownloadBiorxivPaper(unittest.TestCase):
             overrides=["tools/download_biorxiv_paper=default"]
         )
 
-        assert retriever.api_url == "https://api"
+        assert retriever.request_timeout == 10
     @patch(
-        "aiagents4pharma.talk2scholars.tools.paper_download.download_biorxiv_input.DownloadBiorxivPaperInput.load_hydra_configs"
+        f"{PATH}.DownloadBiorxivPaperInput.load_hydra_configs"
     )
     @patch("requests.get")
     def test_download_biorxiv_paper_success(self, mock_get, mock_load_hydra):
@@ -89,7 +90,7 @@ class TestDownloadBiorxivPaper(unittest.TestCase):
         self.assertEqual(metadata["biorxiv_id"], doi)
 
     @patch(
-        "aiagents4pharma.talk2scholars.tools.paper_download.download_biorxiv_input.DownloadBiorxivPaperInput.load_hydra_configs"
+        f"{PATH}.DownloadBiorxivPaperInput.load_hydra_configs"
     )
     @patch("requests.get")
     def test_no_entry_found(self, mock_get, mock_load_hydra):
@@ -115,7 +116,7 @@ class TestDownloadBiorxivPaper(unittest.TestCase):
         self.assertEqual(str(context.exception), f"No metadata found for DOI: {doi}")
 
     @patch(
-        "aiagents4pharma.talk2scholars.tools.paper_download.download_biorxiv_input.DownloadBiorxivPaperInput.load_hydra_configs"
+        f"{PATH}.DownloadBiorxivPaperInput.load_hydra_configs"
     )
     @patch("requests.get")
     def test_no_pdf_url_found(self, mock_get, mock_load_hydra):
@@ -156,7 +157,7 @@ class TestDownloadBiorxivPaper(unittest.TestCase):
         self.assertEqual(metadata["URL"], expected_url)
 
     @patch(
-        "aiagents4pharma.talk2scholars.tools.paper_download.download_biorxiv_input.DownloadBiorxivPaperInput.load_hydra_configs"
+        f"{PATH}.DownloadBiorxivPaperInput.load_hydra_configs"
     )
     @patch("requests.get")
     def test_extract_metadata_pdf_not_found(self, mock_get, mock_load_hydra):
@@ -184,12 +185,12 @@ class TestDownloadBiorxivPaper(unittest.TestCase):
 
         # First GET returns metadata, second GET (PDF link) returns 404
         def side_effect(url, timeout):
+            timeout+=1
             if "api" in url:
                 return metadata_response
-            else:
-                pdf_response = MagicMock()
-                pdf_response.status_code = 404  # Simulate PDF link not found
-                return pdf_response
+            pdf_response = MagicMock()
+            pdf_response.status_code = 404  # Simulate PDF link not found
+            return pdf_response
 
         mock_get.side_effect = side_effect
 
@@ -202,9 +203,9 @@ class TestDownloadBiorxivPaper(unittest.TestCase):
         self.assertNotIn(doi, update["article_data"])
 
     @patch(
-        "aiagents4pharma.talk2scholars.tools.paper_download.download_biorxiv_input.DownloadBiorxivPaperInput.load_hydra_configs"
+        f"{PATH}.DownloadBiorxivPaperInput.load_hydra_configs"
     )
-    @patch("aiagents4pharma.talk2scholars.tools.paper_download.download_biorxiv_input.DownloadBiorxivPaperInput.extract_metadata")
+    @patch(f"{PATH}.DownloadBiorxivPaperInput.extract_metadata")
     @patch("requests.get")
     def test_paper_retriever_else_branch(self, mock_get, mock_extract_metadata, mock_load_hydra):
         """Test paper_retriever hits 'else' branch when extract_metadata returns empty dict."""
@@ -240,4 +241,3 @@ class TestDownloadBiorxivPaper(unittest.TestCase):
 
         # 'article_data' should not contain DOI because metadata is empty
         self.assertNotIn(doi, update["article_data"])
-

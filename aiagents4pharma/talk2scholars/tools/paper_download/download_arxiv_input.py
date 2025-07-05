@@ -22,7 +22,7 @@ class DownloadArxivPaperInput(BasePaperRetriever):
     def __init__(self):
         self.ns = {"atom": "http://www.w3.org/2005/Atom"}
         self.request_timeout = None
-        
+
     # Helper to load arXiv download configuration
     def load_hydra_configs(self) -> Any:
         """Load arXiv download configuration."""
